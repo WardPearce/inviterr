@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { siteNameStore } from '$lib/stores';
+	import { siteNameStore, siteThemeStore } from '$lib/stores';
 	import { ArrowRight } from 'lucide-svelte';
 	import { get } from 'svelte/store';
 
 	function changeTheme(dataTheme: string) {
 		document.body.setAttribute('data-theme', dataTheme);
+		siteThemeStore.set(dataTheme);
 	}
 
 	const themesPreviews: { name: string; emoji: string }[] = [
@@ -55,7 +56,9 @@
 			<button
 				data-theme={theme.name}
 				onclick={() => changeTheme(theme.name)}
-				class="bg-surface-50-950 preset-outlined-surface-100-900 hover:preset-outlined-surface-800-200 grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 rounded-md p-4 !ring-[1px]"
+				class="bg-surface-50-950 hover:preset-outlined-surface-800-200 grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 rounded-md p-4 !ring-[1px]"
+				class:preset-outlined-primary-500={theme.name === $siteThemeStore}
+				class:preset-outlined-surface-100-900={theme.name !== $siteThemeStore}
 			>
 				<span>{theme.emoji}</span>
 				<h3 class="h6 !text-surface-950-50 text-left">{theme.name}</h3>
