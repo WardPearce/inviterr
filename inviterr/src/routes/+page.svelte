@@ -36,7 +36,7 @@
 	<div class="flex flex-col items-center space-y-5 text-center">
 		<h2 class="h2 leading-tight">Welcome to Inviterr</h2>
 		<p class="leading-relaxed">The modern invitation system for Jellyfin, Plex & Emby</p>
-		<a href="/setup/theme" class="btn preset-filled">
+		<a href="/setup" class="btn preset-filled">
 			<span>
 				<Sparkles />
 			</span>

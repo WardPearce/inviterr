@@ -2,7 +2,6 @@
 	import { siteThemeStore } from '$lib/stores';
 
 	function changeTheme(dataTheme: string) {
-		document.body.setAttribute('data-theme', dataTheme);
 		siteThemeStore.set(dataTheme);
 	}
 
@@ -33,6 +32,8 @@
 </script>
 
 <h1 class="h2 pt-5">Select a theme</h1>
+
+<input type="text" required name="themeName" hidden value={$siteThemeStore} />
 
 <div class="grid grid-cols-1 gap-2 md:grid-cols-2 2xl:grid-cols-3">
 	{#each themesPreviews as theme}

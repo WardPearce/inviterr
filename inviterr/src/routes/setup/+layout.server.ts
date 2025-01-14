@@ -13,8 +13,12 @@ export async function load({ cookies, locals }) {
       path: '/',
       maxAge: 60 * 60 * 24 * 120,
     });
-    await locals.mongo.collection('setup').insertOne({ token: token });
+    await locals.mongo.collection('setup').insertOne({ token: token, completed: false });
   } else {
+    if (setupCookie.completed) {
+      throw redirect(302, '/');
+    }
+
     const givenSetupCookie = cookies.get('setupLock');
     if (!givenSetupCookie) {
       throw redirect(302, '/?error=setupStarted');

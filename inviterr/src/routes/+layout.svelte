@@ -1,10 +1,25 @@
 <script lang="ts">
-	import { siteNameStore } from '$lib/stores';
+	import { siteNameStore, siteThemeStore } from '$lib/stores';
+	import { onMount } from 'svelte';
 	import '../app.css';
-	let { children } = $props();
 
 	import { AppBar } from '@skeletonlabs/skeleton-svelte';
 	import { Github } from 'lucide-svelte';
+
+	let { children, data } = $props();
+
+	onMount(() => {
+		if (data.customization) {
+			document.body.setAttribute('data-theme', data.customization.themeName);
+
+			siteThemeStore.set(data.customization.themeName);
+			siteNameStore.set(data.customization.siteName);
+		} else {
+			document.body.setAttribute('data-theme', 'wintry');
+		}
+
+		siteThemeStore.subscribe((dataTheme) => document.body.setAttribute('data-theme', dataTheme));
+	});
 </script>
 
 <AppBar>

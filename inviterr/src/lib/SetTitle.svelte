@@ -13,6 +13,8 @@
 		}}
 		class="input"
 		type="text"
+		name="siteTitle"
+		required
 		value={get(siteNameStore)}
 	/>
 </label>
