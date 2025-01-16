@@ -20,10 +20,8 @@
 		"@sveltejs/adapter-auto": "^3.0.0",
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
-		"@types/cookie-signature": "^1.1.2",
 		"@types/node": "^22.10.6",
 		"autoprefixer": "^10.4.20",
-		"cookie-signature": "^1.2.2",
 		"eslint": "^9.7.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.36.0",
@@ -41,7 +39,6 @@
 	},
 	"dependencies": {
 		"@tailwindcss/forms": "^0.5.9",
-		"@tailwindcss/typography": "^0.5.15",
-		"mongodb": "^6.12.0"
+		"@tailwindcss/typography": "^0.5.15"
 	}
 }
