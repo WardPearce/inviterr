@@ -1,8 +1,4 @@
-import asyncio
-from typing import Optional
-
-from aiohttp.client_exceptions import ClientResponseError
-from inviterr.models.invite import InviteJellyfinModel
+from inviterr.models.invite.internal import InviteJellyfinModel
 from inviterr.models.platform import PlatformModel
 from inviterr.services.platform.base import PlatformBase, PlatformInviteBase
 from litestar.exceptions import NotFoundException
@@ -12,12 +8,15 @@ class JellfinInvite(PlatformInviteBase):
     def __init__(self, platform: PlatformBase, invite: InviteJellyfinModel) -> None:
         super().__init__(platform, invite)
 
-    async def create(self, username: Optional[str], password: Optional[str]) -> str:
+    async def create(self, username: str, password: str) -> str:
         assert isinstance(
             self._invite, InviteJellyfinModel
         ), "JellfinInvite must be given InviteJellyfinModel"
 
-        invite = await self.get()
+        if self._invite.folders and sorted(self._platform._platform.folders) != sorted(
+            self._invite.folders
+        ):
+            raise NotFoundException(detail="Folders don't match instance.")
 
         created_user = await (
             await self._platform.request(

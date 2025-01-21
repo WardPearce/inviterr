@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from inviterr.models.invite.permssions import InviteJellyfinPermissions
 from pydantic import BaseModel, Field
@@ -19,20 +19,21 @@ class InvitePlatformBaseModel(BaseModel):
 
 class InviteJellyfinModel(InvitePlatformBaseModel):
     permissions: InviteJellyfinPermissions
+    type: Literal["jellyfin"] = "jellyfin"
 
 
 class InvitePlexModel(InvitePlatformBaseModel):
-    pass
+    type: Literal["plex"] = "plex"
 
 
 class InviteEmbyModel(InvitePlatformBaseModel):
-    pass
+    type: Literal["emby"] = "emby"
 
 
 class InviteModel(BaseModel):
     """Describes a invite for media platforms & request portals"""
 
-    id: str = Field(description="ID of the invitation code")
+    id_: str = Field(description="ID of the invitation code")
     password: str = Field(description="Invitation password hashed")
 
     jellyfin: List[InviteJellyfinModel] = []

@@ -1,8 +1,7 @@
-from typing import Literal, Optional, Tuple
+from typing import Literal, Optional
 
-import bcrypt
 from aiohttp.client import ClientResponse
-from inviterr.models.invite import (
+from inviterr.models.invite.internal import (
     InviteEmbyModel,
     InviteJellyfinModel,
     InviteModel,
@@ -10,7 +9,6 @@ from inviterr.models.invite import (
 )
 from inviterr.models.platform import PlatformModel
 from inviterr.resources import Session
-from litestar.exceptions import NotAuthorizedException
 
 
 class PlatformInviteBase:
@@ -22,34 +20,6 @@ class PlatformInviteBase:
     ) -> None:
         self._platform = platform
         self._invite = invite
-
-    @property
-    def extracted_code(self) -> Tuple[str, str]:
-        try:
-            id_, password = self._code.split("-")
-        except ValueError:
-            raise NotAuthorizedException()
-
-        return id_, password
-
-    async def get(self) -> InviteModel:
-        id_, _ = self.extracted_code
-
-        result = await Session.mongo.find_one({"_id": id_})
-        if not result:
-            raise NotAuthorizedException()
-
-        return InviteModel(**result)
-
-    async def validate(self) -> InviteModel:
-        _, password = self.extracted_code
-
-        invite = await self.get()
-
-        if not bcrypt.checkpw(password.encode(), invite.password.encode()):
-            raise NotAuthorizedException()
-
-        return invite
 
     async def create(
         self, username: Optional[str] = None, password: Optional[str] = None
