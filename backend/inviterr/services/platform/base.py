@@ -2,16 +2,26 @@ from typing import Literal, Optional, Tuple
 
 import bcrypt
 from aiohttp.client import ClientResponse
-from inviterr.models.invite import InviteModel
+from inviterr.models.invite import (
+    InviteEmbyModel,
+    InviteJellyfinModel,
+    InviteModel,
+    InvitePlexModel,
+)
 from inviterr.models.platform import PlatformModel
 from inviterr.resources import Session
 from litestar.exceptions import NotAuthorizedException
 
 
 class PlatformInviteBase:
-    def __init__(self, platform: "PlatformBase", code: str) -> None:
+
+    def __init__(
+        self,
+        platform: "PlatformBase",
+        invite: InviteJellyfinModel | InviteEmbyModel | InvitePlexModel,
+    ) -> None:
         self._platform = platform
-        self._code = code
+        self._invite = invite
 
     @property
     def extracted_code(self) -> Tuple[str, str]:
@@ -87,4 +97,6 @@ class PlatformBase:
         resp.raise_for_status()
         return resp
 
-    def invite(self, code: str) -> PlatformInviteBase: ...
+    def invite(
+        self, invite: InviteJellyfinModel | InviteEmbyModel | InvitePlexModel
+    ) -> PlatformInviteBase: ...

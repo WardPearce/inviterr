@@ -32,7 +32,7 @@ class InviteEmbyModel(InvitePlatformBaseModel):
 class InviteModel(BaseModel):
     """Describes a invite for media platforms & request portals"""
 
-    id_: str = Field(alias="id", description="ID of the invitation code")
+    id: str = Field(description="ID of the invitation code")
     password: str = Field(description="Invitation password hashed")
 
     jellyfin: List[InviteJellyfinModel] = []

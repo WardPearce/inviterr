@@ -1,6 +1,7 @@
 import asyncio
 from typing import Optional
 
+from aiohttp.client_exceptions import ClientResponseError
 from inviterr.models.invite import InviteJellyfinModel
 from inviterr.models.platform import PlatformModel
 from inviterr.services.platform.base import PlatformBase, PlatformInviteBase
@@ -8,15 +9,16 @@ from litestar.exceptions import NotFoundException
 
 
 class JellfinInvite(PlatformInviteBase):
-    def __init__(self, platform: PlatformBase, identifier: str) -> None:
-        super().__init__(platform, identifier)
+    def __init__(self, platform: PlatformBase, invite: InviteJellyfinModel) -> None:
+        super().__init__(platform, invite)
 
-    async def __create(
-        self,
-        username: Optional[str],
-        password: Optional[str],
-        invite_platform: InviteJellyfinModel,
-    ) -> None:
+    async def create(self, username: Optional[str], password: Optional[str]) -> str:
+        assert isinstance(
+            self._invite, InviteJellyfinModel
+        ), "JellfinInvite must be given InviteJellyfinModel"
+
+        invite = await self.get()
+
         created_user = await (
             await self._platform.request(
                 "/Users/New",
@@ -27,13 +29,13 @@ class JellfinInvite(PlatformInviteBase):
 
         permission_payload = {
             "AuthenticationProviderId": "Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider",
-            **invite_platform.permissions.model_dump(exclude_none=True),
-            "MaxActiveSessions": invite_platform.sessions,
+            **self._invite.permissions.model_dump(exclude_none=True),
+            "MaxActiveSessions": self._invite.sessions,
         }
 
-        if invite_platform.folders:
+        if self._invite.folders:
             permission_payload["EnableAllFolders"] = False
-            permission_payload["EnabledFolders"] = invite_platform.folders
+            permission_payload["EnabledFolders"] = self._invite.folders
         else:
             permission_payload["EnableAllFolders"] = True
 
@@ -41,19 +43,12 @@ class JellfinInvite(PlatformInviteBase):
             f"/Users/{created_user['Id']}/Policy", "POST", json=permission_payload
         )
 
-    async def create(self, username: Optional[str], password: Optional[str]) -> None:
-        invite = await self.validate()
-
-        if not invite.jellyfin:
-            raise NotFoundException(detail="No jellyfin config for that invite")
-
-        for jellyfin in invite.jellyfin:
-            asyncio.create_task(self.__create(username, password, jellyfin))
+        return created_user["Id"]
 
 
 class JellyfinPlatform(PlatformBase):
     def __init__(self, platform: PlatformModel) -> None:
         super().__init__(platform)
 
-    def invite(self, code: str) -> JellfinInvite:
-        return JellfinInvite(self, code)
+    def invite(self, invite: InviteJellyfinModel) -> JellfinInvite:
+        return JellfinInvite(self, invite)

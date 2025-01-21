@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 class PlatformModel(BaseModel):
     """Describes a media platform, e.g. jellyfin, plex or emby."""
 
-    id_: str = Field(alias="id", description="Inviterr's internal ID of the server")
+    id: str = Field(description="Inviterr's internal ID of the server")
     platform: Literal["plex", "emby", "jellyfin"]
     api_key: str = Field(description="API key to access external media server")
     server: str = Field(description="Endpoint for the media server")
