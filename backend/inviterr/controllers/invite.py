@@ -14,6 +14,7 @@ from inviterr.models.invite.internal import (
 from inviterr.models.invite.redeem import RedeemInviteModel
 from inviterr.models.platform import PlatformModel
 from inviterr.resources import Session
+from inviterr.services.platform.emby import EmbyPlatform
 from inviterr.services.platform.jellyfin import JellyfinPlatform
 from litestar import Controller, Router, delete, get, post, put
 from litestar.exceptions import (
@@ -187,7 +188,15 @@ class InviteRedeemController(Controller):
 
             match invite_platform.type:
                 case "emby":
-                    pass
+                    asyncio.create_task(
+                        EmbyPlatform(platform)
+                        .invite(invite_platform)
+                        .create(
+                            # Not possible to be None.
+                            data.jellyfin_emby_auth.username,  # type: ignore
+                            data.jellyfin_emby_auth.password,  # type: ignore
+                        )
+                    )
                 case "jellyfin":
                     asyncio.create_task(
                         JellyfinPlatform(platform)

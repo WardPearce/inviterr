@@ -4,11 +4,11 @@ from aiohttp.client import ClientResponse
 from inviterr.models.invite.internal import (
     InviteEmbyModel,
     InviteJellyfinModel,
-    InviteModel,
     InvitePlexModel,
 )
 from inviterr.models.platform import PlatformModel
 from inviterr.resources import Session
+from litestar.exceptions import NotFoundException
 
 
 class PlatformInviteBase:
@@ -20,6 +20,12 @@ class PlatformInviteBase:
     ) -> None:
         self._platform = platform
         self._invite = invite
+
+    def validate_folders(self) -> None:
+        if self._invite.folders and sorted(self._platform._platform.folders) != sorted(
+            self._invite.folders
+        ):
+            raise NotFoundException(detail="Folders don't match instance.")
 
     async def create(
         self, username: Optional[str] = None, password: Optional[str] = None

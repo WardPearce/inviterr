@@ -1,7 +1,11 @@
 from datetime import datetime
 from typing import List, Literal, Optional
 
-from inviterr.models.invite.permssions import InviteJellyfinPermissions
+from inviterr.models.invite import permssions
+from inviterr.models.invite.permssions import (
+    InviteEmbyPermissions,
+    InviteJellyfinPermissions,
+)
 from pydantic import BaseModel, Field
 
 
@@ -31,6 +35,7 @@ class InvitePlexModel(InvitePlatformBaseModel):
 
 
 class InviteEmbyModel(InvitePlatformBaseModel):
+    permissions: InviteEmbyPermissions
     type: Literal["emby"] = "emby"
 
 
@@ -54,6 +59,9 @@ class CreatedInviteModel(InviteModel):
 class CreateInviteModel(BaseModel):
     jellyfin: List[InviteJellyfinModel] = []
     plex: List[InvitePlexModel] = []
+    emby: List[InviteEmbyModel] = []
+
+    expires: datetime
     emby: List[InviteEmbyModel] = []
 
     expires: datetime

@@ -4,7 +4,7 @@ from inviterr.services.platform.base import PlatformBase, PlatformInviteBase
 from litestar.exceptions import NotFoundException
 
 
-class JellfinInvite(PlatformInviteBase):
+class JellyfinInvite(PlatformInviteBase):
     def __init__(self, platform: PlatformBase, invite: InviteJellyfinModel) -> None:
         super().__init__(platform, invite)
 
@@ -13,10 +13,7 @@ class JellfinInvite(PlatformInviteBase):
             self._invite, InviteJellyfinModel
         ), "JellfinInvite must be given InviteJellyfinModel"
 
-        if self._invite.folders and sorted(self._platform._platform.folders) != sorted(
-            self._invite.folders
-        ):
-            raise NotFoundException(detail="Folders don't match instance.")
+        self.validate_folders()
 
         created_user = await (
             await self._platform.request(
@@ -49,5 +46,5 @@ class JellyfinPlatform(PlatformBase):
     def __init__(self, platform: PlatformModel) -> None:
         super().__init__(platform)
 
-    def invite(self, invite: InviteJellyfinModel) -> JellfinInvite:
-        return JellfinInvite(self, invite)
+    def invite(self, invite: InviteJellyfinModel) -> JellyfinInvite:
+        return JellyfinInvite(self, invite)
