@@ -3,6 +3,7 @@ import secrets
 
 import bcrypt
 from inviterr.guards import user_roles_guard
+from inviterr.invite import Invite
 from inviterr.misc import url_safe_id
 from inviterr.models.invite.internal import (
     CreatedInviteModel,
@@ -13,7 +14,7 @@ from inviterr.models.invite.redeem import RedeemInviteModel
 from inviterr.models.platform import PlatformModel
 from inviterr.resources import Session
 from inviterr.services.platform.jellyfin import JellyfinPlatform
-from litestar import Controller, Router, delete, get, post
+from litestar import Controller, Router, delete, get, post, put
 from litestar.exceptions import (
     ClientException,
     NotAuthorizedException,
@@ -30,11 +31,19 @@ class InviteIdController(Controller):
         guards=[user_roles_guard(["invite.find"])],
     )
     async def find(self, id_: str) -> InviteModel:
-        result = await Session.mongo.invite.find_one({"_id": id_})
-        if not result:
-            raise NotFoundException()
+        return await Invite(id_).get()
 
-        return InviteModel(**result)
+    @put(
+        description="Modify an invite",
+        tags=["invite", "modify"],
+        guards=[user_roles_guard(["invite.modify"])],
+    )
+    async def modify(self, id_: str, data: CreateInviteModel) -> None:
+        await Invite(id_).exists_raise()
+
+        await Session.mongo.invite.update_one(
+            {"_id": id_}, data.model_dump(exclude_unset=True)
+        )
 
     @delete(
         description="Deletes an invite",
@@ -42,7 +51,7 @@ class InviteIdController(Controller):
         guards=[user_roles_guard(["invite.delete"])],
     )
     async def delete_(self, id_: str) -> None:
-        await Session.mongo.invite.delete_one({"_id": id_})
+        await Invite(id_).delete()
 
 
 class InviteController(Controller):
@@ -55,7 +64,7 @@ class InviteController(Controller):
         id_ = url_safe_id(6)
 
         # Ensure ID isn't currently in use.
-        while await Session.mongo.invite.count_documents({"_id": id_}) > 0:
+        while await Invite(id_).exists():
             id_ = url_safe_id(6)
             await asyncio.sleep(0.1)
 
@@ -126,11 +135,7 @@ class InviteRedeemController(Controller):
         except ValueError:
             raise NotAuthorizedException()
 
-        result = await Session.mongo.invite.find_one({"_id": id_})
-        if not result:
-            raise NotAuthorizedException()
-
-        invite = InviteModel(**result)
+        invite = await Invite(id_).get()
 
         if not bcrypt.checkpw(password.encode(), invite.password.encode()):
             raise NotAuthorizedException()
