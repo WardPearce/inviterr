@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Literal, Optional
 
 from inviterr.models.invite.permssions import InviteJellyfinPermissions
@@ -13,7 +14,10 @@ class InvitePlatformBaseModel(BaseModel):
         description="A list of folders enabled for the user, if None all folders will be provided.",
     )
     sessions: int = Field(
-        default=0, description="Max allow sessions for user, if 0 is unlimited."
+        default=0,
+        description="Max allow sessions for user, if 0 is unlimited.",
+        ge=0,
+        le=1000,
     )
 
 
@@ -39,3 +43,15 @@ class InviteModel(BaseModel):
     jellyfin: List[InviteJellyfinModel] = []
     plex: List[InvitePlexModel] = []
     emby: List[InviteEmbyModel] = []
+
+
+class CreatedInviteModel(InviteModel):
+    password: str = Field(description="Raw invitation password")
+
+
+class CreateInviteModel(BaseModel):
+    jellyfin: List[InviteJellyfinModel] = []
+    plex: List[InvitePlexModel] = []
+    emby: List[InviteEmbyModel] = []
+
+    expires: datetime
