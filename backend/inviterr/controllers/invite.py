@@ -1,6 +1,8 @@
 import asyncio
 import secrets
 from datetime import datetime, timezone
+from typing import Any
+from uuid import uuid4
 
 import bcrypt
 from inviterr.helpers.guards import user_roles_guard
@@ -19,7 +21,7 @@ from inviterr.resources import Session
 from inviterr.services.platform.emby import EmbyPlatform
 from inviterr.services.platform.jellyfin import JellyfinPlatform
 from inviterr.services.platform.plex import PlexPlatform
-from litestar import Controller, Router, delete, get, post, put
+from litestar import Controller, Request, Router, delete, get, post, put
 from litestar.exceptions import (
     ClientException,
     NotAuthorizedException,
@@ -91,7 +93,9 @@ class InviteController(Controller):
         tags=["invite", "create"],
         guards=[user_roles_guard(["invite.create"])],
     )
-    async def create(self, data: CreateInviteModel) -> CreatedInviteModel:
+    async def create(
+        self, request: Request[UserModel, Any, Any], data: CreateInviteModel
+    ) -> CreatedInviteModel:
         if not data.jellyfin and not data.emby and data.plex:
             raise ClientException(detail="Invite must include at least one platform")
 
@@ -120,6 +124,7 @@ class InviteController(Controller):
 
         created_invite = CreatedInviteModel(
             **data.model_dump(),
+            user_id=request.user.id,
             id=id_,
             password=bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode(),
         )
@@ -263,6 +268,8 @@ class InviteRedeemController(Controller):
                     username=user_account.email,
                     password=None,
                     auth_type="plexOauth",
+                    invite_id=id_,
+                    id=str(uuid4()),
                 ).model_dump()
             )
         elif data.jellyfin_emby_auth:
@@ -275,6 +282,8 @@ class InviteRedeemController(Controller):
                         data.jellyfin_emby_auth.password.encode(), bcrypt.gensalt()
                     ).decode(),
                     auth_type="usernamePassword",
+                    invite_id=id_,
+                    id=str(uuid4()),
                 ).model_dump()
             )
 

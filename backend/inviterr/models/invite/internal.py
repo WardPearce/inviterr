@@ -65,6 +65,8 @@ class InviteModel(CreateInviteModel):
     id: str = Field(description="ID of the invitation code")
     password: str = Field(description="Invitation password hashed")
 
+    user_id: str = Field(description="User ID who created the invite")
+
 
 class CreatedInviteModel(InviteModel):
     """Describes whats returned on invitation creation to admin"""
