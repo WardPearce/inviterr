@@ -15,3 +15,4 @@ class UserModel(BaseModel):
         description="Hashed password if plexOauth isn't being used."
     )
     auth_type: Literal["usernamePassword", "plexOauth"]
+    country: str = "Unknown"

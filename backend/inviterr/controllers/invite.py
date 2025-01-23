@@ -3,9 +3,10 @@ import secrets
 from datetime import datetime, timezone
 
 import bcrypt
-from inviterr.guards import user_roles_guard
-from inviterr.invite import Invite
-from inviterr.misc import url_safe_id
+from inviterr.helpers.guards import user_roles_guard
+from inviterr.helpers.invite import Invite
+from inviterr.helpers.misc import url_safe_id
+from inviterr.helpers.user import username_exists
 from inviterr.models.invite.internal import (
     CreatedInviteModel,
     CreateInviteModel,
@@ -170,6 +171,9 @@ class InviteRedeemController(Controller):
 
         invite = await Invite(id_).get()
 
+        if not invite.jellyfin and not invite.emby and invite.plex:
+            raise ClientException(detail="Invite must include at least one platform")
+
         if datetime.now(tz=timezone.utc) > invite.expires:
             await Invite(id_).delete()
             raise NotFoundException()
@@ -184,7 +188,17 @@ class InviteRedeemController(Controller):
             raise ClientException(detail="jellyfin_emby_auth must be included")
 
         if invite.plex and not data.plex_token:
-            raise ClientException("plex_token must be included")
+            raise ClientException(detail="plex_token must be included")
+
+        if data.jellyfin_emby_auth:
+            data.jellyfin_emby_auth.username = data.jellyfin_emby_auth.username.strip()
+
+            if username_exists(data.jellyfin_emby_auth.username):
+                raise ClientException(detail="Username taken")
+
+            await Session.mongo.jellyfin_emby_taken.insert_one(
+                {"username": data.jellyfin_emby_auth.username}
+            )
 
         user_platform_access_ids: list[str] = []
 
