@@ -47,11 +47,15 @@ class CreateInviteModel(BaseModel):
     plex: List[InvitePlexModel] = []
     emby: List[InviteEmbyModel] = []
 
-    roles: List[str] = []
+    roles: List[str] = Field(
+        [], description="Any special permissions said user should be given"
+    )
 
-    uses: int = 1
+    uses: int = Field(1, description="How many times can a invite code be redeemed")
 
-    expires: Optional[datetime] = None
+    expires: Optional[datetime] = Field(
+        None, description="Optional datetime to stop accepting code"
+    )
 
     onboarding: list[OnboardTemplateModel] = Field([], ge=0, le=30)
 

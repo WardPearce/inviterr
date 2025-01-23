@@ -102,7 +102,7 @@ class InviteController(Controller):
             id_ = url_safe_id(6)
             await asyncio.sleep(0.1)
 
-        password = secrets.token_urlsafe(6)
+        password = secrets.token_urlsafe(16)
 
         for platform in data.jellyfin + data.plex + data.emby:
             if (
