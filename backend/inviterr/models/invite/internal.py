@@ -7,6 +7,7 @@ from inviterr.models.invite.permssions import (
     InviteJellyfinPermissions,
     InvitePlexPermissions,
 )
+from inviterr.models.onboarding import OnboardTemplateModel
 from pydantic import BaseModel, Field
 
 
@@ -41,29 +42,28 @@ class InviteEmbyModel(InvitePlatformBaseModel):
     type: Literal["emby"] = "emby"
 
 
-class InviteModel(BaseModel):
-    """Describes a invite for media platforms & request portals"""
-
-    id_: str = Field(description="ID of the invitation code")
-    password: str = Field(description="Invitation password hashed")
-
-    jellyfin: List[InviteJellyfinModel] = []
-    plex: List[InvitePlexModel] = []
-    emby: List[InviteEmbyModel] = []
-
-    expires: datetime
-
-
-class CreatedInviteModel(InviteModel):
-    password: str = Field(description="Raw invitation password")
-
-
 class CreateInviteModel(BaseModel):
     jellyfin: List[InviteJellyfinModel] = []
     plex: List[InvitePlexModel] = []
     emby: List[InviteEmbyModel] = []
 
-    expires: datetime
-    emby: List[InviteEmbyModel] = []
+    roles: List[str] = []
+
+    uses: int = 1
 
     expires: datetime
+
+    onboarding: list[OnboardTemplateModel] = Field([], ge=0, le=30)
+
+
+class InviteModel(CreateInviteModel):
+    """Describes a invite for media platforms & request portals"""
+
+    id: str = Field(description="ID of the invitation code")
+    password: str = Field(description="Invitation password hashed")
+
+
+class CreatedInviteModel(InviteModel):
+    """Describes whats returned on invitation creation to admin"""
+
+    password: str = Field(description="Raw invitation password")

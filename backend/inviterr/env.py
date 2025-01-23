@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     mongo: MongoDB = MongoDB()
     proxy_urls: ProxiedUrls = ProxiedUrls()
 
+    username_caching_interval: int = 160
+
     model_config = {"env_prefix": "inviterr_"}
 
 

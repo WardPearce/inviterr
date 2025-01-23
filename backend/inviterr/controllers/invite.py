@@ -120,7 +120,7 @@ class InviteController(Controller):
 
         created_invite = CreatedInviteModel(
             **data.model_dump(),
-            id_=id_,
+            id=id_,
             password=bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode(),
         )
 
@@ -175,8 +175,14 @@ class InviteRedeemController(Controller):
             raise ClientException(detail="Invite must include at least one platform")
 
         if datetime.now(tz=timezone.utc) > invite.expires:
-            await Invite(id_).delete()
             raise NotFoundException()
+
+        if invite.uses <= 0:
+            raise NotFoundException()
+
+        await Session.mongo.invite.update_one(
+            {"_id": id_}, {"$set": {"uses": invite.uses - 1}}
+        )
 
         if not bcrypt.checkpw(password.encode(), invite.password.encode()):
             raise NotAuthorizedException()
@@ -252,7 +258,7 @@ class InviteRedeemController(Controller):
             )
             await Session.mongo.user.insert_one(
                 UserModel(
-                    roles=[],
+                    roles=invite.roles,
                     internal_platform_ids=user_platform_access_ids,
                     username=user_account.email,
                     password=None,
@@ -262,7 +268,7 @@ class InviteRedeemController(Controller):
         elif data.jellyfin_emby_auth:
             await Session.mongo.user.insert_one(
                 UserModel(
-                    roles=[],
+                    roles=invite.roles,
                     internal_platform_ids=user_platform_access_ids,
                     username=data.jellyfin_emby_auth.username,
                     password=bcrypt.hashpw(
