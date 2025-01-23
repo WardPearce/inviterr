@@ -54,5 +54,3 @@ class PlexPlatform(PlatformBase):
 
     def invite(self, invite: InvitePlexModel) -> PlexInvite:
         return PlexInvite(self, invite)
-        return PlexInvite(self, invite)
-        return PlexInvite(self, invite)
