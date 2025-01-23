@@ -34,8 +34,9 @@ class PlexInvite(PlatformInviteBase):
         invite = await loop.run_in_executor(
             None,
             lambda: server_account.inviteFriend(
-                user_account.email,
-                **self._invite.permissions.model_dump(exclude_none=True)
+                user=user_account.email,
+                sections=self._invite.folders if self._invite.folders else None,
+                **self._invite.permissions.model_dump(exclude_none=True),
             ),
         )
 

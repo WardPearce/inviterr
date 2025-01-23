@@ -20,7 +20,7 @@ class InvitePlatformBaseModel(BaseModel):
     )
     sessions: int = Field(
         default=0,
-        description="Max allow sessions for user, if 0 is unlimited.",
+        description="Max allow sessions for user, if 0 is unlimited. For Plex this must be implemented with an external system.",
         ge=0,
         le=1000,
     )
