@@ -13,6 +13,7 @@ motor = "^3.6.1"
 bcrypt = "^4.2.1"
 plexapi = "^4.16.1"
 pydantic-settings = "^2.7.1"
+apscheduler = {version = "3.11.0", extras = ["mongodb"]}
 
 
 [build-system]

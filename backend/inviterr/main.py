@@ -1,14 +1,17 @@
 import aiohttp
 import pkg_resources
+from apscheduler.jobstores.mongodb import MongoDBJobStore
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from inviterr.env import SETTINGS
 from inviterr.resources import Session
 from litestar import Litestar, Request
 from litestar.config.cors import CORSConfig
 from litestar.openapi import OpenAPIConfig
 from litestar.openapi.plugins import ScalarRenderPlugin
-from litestar.openapi.spec import Contact, License, Server
+from litestar.openapi.spec import License, Server
 from motor import motor_asyncio
 from pydantic import BaseModel
+from pymongo import AsyncMongoClient
 
 from inviterr import controllers
 
@@ -27,6 +30,22 @@ async def startup_sessions(app: Litestar) -> None:
     await Session.mongo.client.server_info()
 
     Session.http = aiohttp.ClientSession()
+
+    scheduler = AsyncIOScheduler(
+        gconfig={
+            "jobstores": {
+                "default",
+                MongoDBJobStore(
+                    database=f"{SETTINGS.mongo.collection}_apscheduler",
+                    client=AsyncMongoClient(
+                        host=SETTINGS.mongo.host, port=SETTINGS.mongo.port
+                    ),
+                ),
+            }
+        }
+    )
+
+    scheduler.start()
 
 
 async def shutdown_sessions(app: Litestar) -> None:
