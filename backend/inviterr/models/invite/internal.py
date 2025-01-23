@@ -1,13 +1,12 @@
 from datetime import datetime
 from typing import List, Literal, Optional
 
-from inviterr.models.invite import permssions
-from inviterr.models.invite.permssions import (
+from inviterr.models.invite.permissions import (
     InviteEmbyPermissions,
     InviteJellyfinPermissions,
     InvitePlexPermissions,
 )
-from inviterr.models.onboarding import OnboardTemplateModel
+from inviterr.models.onboarding import OnboardTemplateOrderModel
 from pydantic import BaseModel, Field
 
 
@@ -57,7 +56,7 @@ class CreateInviteModel(BaseModel):
         None, description="Optional datetime to stop accepting code"
     )
 
-    onboarding: list[OnboardTemplateModel] = Field([], ge=0, le=30)
+    onboarding: list[OnboardTemplateOrderModel] = Field([], ge=0, le=30)
 
 
 class InviteModel(CreateInviteModel):
