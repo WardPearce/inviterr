@@ -21,7 +21,7 @@ from litestar.exceptions import (
 )
 
 
-class InviteController(Controller):
+class InviteIdController(Controller):
     path = "/{id_:str}"
 
     @get(
@@ -45,7 +45,7 @@ class InviteController(Controller):
         await Session.mongo.invite.delete_one({"_id": id_})
 
 
-class InviteCreateController(Controller):
+class InviteController(Controller):
     @post(
         description="Create an invite",
         tags=["invite", "create"],
@@ -86,6 +86,25 @@ class InviteCreateController(Controller):
         created_invite.password = password  # Set to raw password for response
 
         return created_invite
+
+    @get(
+        description="List 100 invites at a time",
+        tags=["invite", "list"],
+        guards=[user_roles_guard(["invite.list"])],
+        path="/page:int",
+    )
+    async def list_(self, page: int = 0) -> list[InviteModel]:
+        results: list[InviteModel] = []
+
+        async for invite in (
+            Session.mongo.invite.find()
+            .sort("expires", -1)
+            .skip((page - 1) * 100)
+            .limit(100)
+        ):
+            results.append(InviteModel(**invite))
+
+        return results
 
 
 class InviteRedeemController(Controller):
@@ -153,6 +172,6 @@ class InviteRedeemController(Controller):
 
 router = Router(
     "/invite",
-    route_handlers=[InviteRedeemController, InviteCreateController, InviteController],
+    route_handlers=[InviteRedeemController, InviteIdController, InviteController],
     tags=["invite"],
 )
