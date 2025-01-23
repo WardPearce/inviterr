@@ -51,7 +51,7 @@ class CreateInviteModel(BaseModel):
 
     uses: int = 1
 
-    expires: datetime
+    expires: Optional[datetime] = None
 
     onboarding: list[OnboardTemplateModel] = Field([], ge=0, le=30)
 

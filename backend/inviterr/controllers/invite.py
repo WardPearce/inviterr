@@ -174,7 +174,7 @@ class InviteRedeemController(Controller):
         if not invite.jellyfin and not invite.emby and invite.plex:
             raise ClientException(detail="Invite must include at least one platform")
 
-        if datetime.now(tz=timezone.utc) > invite.expires:
+        if invite.expires and datetime.now(tz=timezone.utc) > invite.expires:
             raise NotFoundException()
 
         if invite.uses <= 0:
