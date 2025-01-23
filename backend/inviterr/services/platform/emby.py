@@ -5,7 +5,6 @@ from litestar.exceptions import NotFoundException
 
 
 class EmbyInvite(PlatformInviteBase):
-
     def __init__(self, platform: PlatformBase, invite: InviteEmbyModel) -> None:
         super().__init__(platform, invite)
 
