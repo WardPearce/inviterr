@@ -1,7 +1,6 @@
 from inviterr.models.invite.internal import InviteJellyfinModel
 from inviterr.models.platform import PlatformModel
 from inviterr.services.platform.base import PlatformBase, PlatformInviteBase
-from litestar.exceptions import NotFoundException
 
 
 class JellyfinInvite(PlatformInviteBase):

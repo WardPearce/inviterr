@@ -5,6 +5,7 @@ from inviterr.models.invite import permssions
 from inviterr.models.invite.permssions import (
     InviteEmbyPermissions,
     InviteJellyfinPermissions,
+    InvitePlexPermissions,
 )
 from pydantic import BaseModel, Field
 
@@ -31,6 +32,7 @@ class InviteJellyfinModel(InvitePlatformBaseModel):
 
 
 class InvitePlexModel(InvitePlatformBaseModel):
+    permissions: InvitePlexPermissions
     type: Literal["plex"] = "plex"
 
 

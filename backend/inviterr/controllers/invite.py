@@ -16,6 +16,7 @@ from inviterr.models.platform import PlatformModel
 from inviterr.resources import Session
 from inviterr.services.platform.emby import EmbyPlatform
 from inviterr.services.platform.jellyfin import JellyfinPlatform
+from inviterr.services.platform.plex import PlexPlatform
 from litestar import Controller, Router, delete, get, post, put
 from litestar.exceptions import (
     ClientException,
@@ -208,7 +209,11 @@ class InviteRedeemController(Controller):
                         )
                     )
                 case "plex":
-                    pass
+                    asyncio.create_task(
+                        PlexPlatform(platform)
+                        .invite(invite_platform)
+                        .create(data.plex_token)  # type: ignore
+                    )
 
 
 router = Router(

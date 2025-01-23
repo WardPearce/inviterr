@@ -224,3 +224,27 @@ class InviteEmbyPermissions(BaseModel):
     DisablePremiumFeatures: Optional[bool] = Field(
         None, description="Indicates if premium features are disabled."
     )
+
+
+class InvitePlexPermissions(BaseModel):
+    allowSync: Optional[bool] = Field(
+        None, description="Set True to allow user to sync content."
+    )
+    allowCameraUpload: Optional[bool] = Field(
+        None, description="Set True to allow user to upload photos."
+    )
+    allowChannels: Optional[bool] = Field(
+        None, description="Set True to allow user to utilize installed channels."
+    )
+    filterMovies: Optional[dict] = Field(
+        None,
+        description="Dict containing key 'contentRating' and/or 'label' each set to a list of values to be filtered. ex: `{'contentRating':['G'], 'label':['foo']}`",
+    )
+    filterTelevision: Optional[dict] = Field(
+        None,
+        description="Dict containing key 'contentRating' and/or 'label' each set to a list of values to be filtered. ex: `{'contentRating':['G'], 'label':['foo']}`",
+    )
+    filterMusic: Optional[dict] = Field(
+        None,
+        description="Dict containing key 'label' set to a list of values to be filtered. ex: `{'label':['foo']}`",
+    )

@@ -12,7 +12,6 @@ from litestar.exceptions import NotFoundException
 
 
 class PlatformInviteBase:
-
     def __init__(
         self,
         platform: "PlatformBase",
