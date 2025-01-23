@@ -42,8 +42,30 @@ class InviteIdController(Controller):
         await Invite(id_).exists_raise()
 
         await Session.mongo.invite.update_one(
-            {"_id": id_}, data.model_dump(exclude_unset=True)
+            {"_id": id_}, {"$set": data.model_dump(exclude_unset=True)}
         )
+
+    @delete(
+        path="/password-reset",
+        description="Resets the password for an invite",
+        tags=["invite", "reset"],
+        guards=[user_roles_guard(["invite.reset"])],
+    )
+    async def reset(self, id_: str) -> str:
+        password = secrets.token_urlsafe(6)
+
+        await Session.mongo.invite.update_one(
+            {"_id": id_},
+            {
+                "$set": {
+                    "password": bcrypt.hashpw(
+                        password.encode(), bcrypt.gensalt()
+                    ).decode()
+                }
+            },
+        )
+
+        return password
 
     @delete(
         description="Deletes an invite",
