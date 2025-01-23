@@ -176,14 +176,14 @@ class InviteRedeemController(Controller):
 
         invite = await Invite(id_).get()
 
-        if not invite.jellyfin and not invite.emby and invite.plex:
-            raise ClientException(detail="Invite must include at least one platform")
-
         if invite.expires and datetime.now(tz=timezone.utc) > invite.expires:
-            raise NotFoundException()
+            raise NotAuthorizedException()
 
         if invite.uses <= 0:
-            raise NotFoundException()
+            raise NotAuthorizedException()
+
+        if not invite.jellyfin and not invite.emby and invite.plex:
+            raise ClientException(detail="Invite must include at least one platform")
 
         await Session.mongo.invite.update_one(
             {"_id": id_}, {"$set": {"uses": invite.uses - 1}}
