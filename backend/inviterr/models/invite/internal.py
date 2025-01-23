@@ -44,6 +44,8 @@ class InviteModel(BaseModel):
     plex: List[InvitePlexModel] = []
     emby: List[InviteEmbyModel] = []
 
+    expires: datetime
+
 
 class CreatedInviteModel(InviteModel):
     password: str = Field(description="Raw invitation password")

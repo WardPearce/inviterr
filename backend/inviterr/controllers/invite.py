@@ -1,5 +1,6 @@
 import asyncio
 import secrets
+from datetime import datetime, timezone
 
 import bcrypt
 from inviterr.guards import user_roles_guard
@@ -146,7 +147,7 @@ class InviteRedeemController(Controller):
         tags=["invite", "redeem"],
         exclude_from_auth=True,
     )
-    async def create(self, data: RedeemInviteModel) -> None:
+    async def redeem(self, data: RedeemInviteModel) -> None:
         if not data.jellyfin_emby_auth and not data.plex_token:
             raise ClientException(
                 detail="Must have at least jellyfin_emby_auth or plex_token defined"
@@ -158,6 +159,10 @@ class InviteRedeemController(Controller):
             raise NotAuthorizedException()
 
         invite = await Invite(id_).get()
+
+        if datetime.now(tz=timezone.utc) > invite.expires:
+            await Invite(id_).delete()
+            raise NotFoundException()
 
         if not bcrypt.checkpw(password.encode(), invite.password.encode()):
             raise NotAuthorizedException()
