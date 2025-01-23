@@ -22,14 +22,16 @@ class PlexInvite(PlatformInviteBase):
 
         plex = await loop.run_in_executor(
             None,
-            PlexServer,
-            self._platform._platform.server,
-            self._platform._platform.api_key,
+            lambda: PlexServer(
+                self._platform._platform.server, self._platform._platform.api_key
+            ),
         )
 
         # Is long running synchronous so must be ran in executor
         server_account = await loop.run_in_executor(None, plex.myPlexAccount)
-        user_account = await loop.run_in_executor(None, MyPlexAccount, password)
+        user_account = await loop.run_in_executor(
+            None, lambda: MyPlexAccount(token=password)
+        )
 
         invite = await loop.run_in_executor(
             None,

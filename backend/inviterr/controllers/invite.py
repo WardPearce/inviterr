@@ -13,6 +13,7 @@ from inviterr.models.invite.internal import (
 )
 from inviterr.models.invite.redeem import RedeemInviteModel
 from inviterr.models.platform import PlatformModel
+from inviterr.models.user import UserModel
 from inviterr.resources import Session
 from inviterr.services.platform.emby import EmbyPlatform
 from inviterr.services.platform.jellyfin import JellyfinPlatform
@@ -23,6 +24,7 @@ from litestar.exceptions import (
     NotAuthorizedException,
     NotFoundException,
 )
+from plexapi.myplex import MyPlexAccount
 
 
 class InviteIdController(Controller):
@@ -42,6 +44,9 @@ class InviteIdController(Controller):
         guards=[user_roles_guard(["invite.modify"])],
     )
     async def modify(self, id_: str, data: CreateInviteModel) -> None:
+        if not data.jellyfin and not data.emby and data.plex:
+            raise ClientException(detail="Invite must include at least one platform")
+
         await Invite(id_).exists_raise()
 
         await Session.mongo.invite.update_one(
@@ -86,6 +91,9 @@ class InviteController(Controller):
         guards=[user_roles_guard(["invite.create"])],
     )
     async def create(self, data: CreateInviteModel) -> CreatedInviteModel:
+        if not data.jellyfin and not data.emby and data.plex:
+            raise ClientException(detail="Invite must include at least one platform")
+
         id_ = url_safe_id(6)
 
         # Ensure ID isn't currently in use.
@@ -178,6 +186,10 @@ class InviteRedeemController(Controller):
         if invite.plex and not data.plex_token:
             raise ClientException("plex_token must be included")
 
+        user_platform_access_ids: list[str] = []
+
+        platform_tasks = []
+
         for invite_platform in invite.plex + invite.jellyfin + invite.emby:
             platform_result = await Session.mongo.platform.find_one(
                 {"_id": invite_platform.platform_internal_id}
@@ -185,11 +197,13 @@ class InviteRedeemController(Controller):
             if not platform_result:
                 continue
 
+            user_platform_access_ids.append(invite_platform.platform_internal_id)
+
             platform = PlatformModel(**platform_result)
 
             match invite_platform.type:
                 case "emby":
-                    asyncio.create_task(
+                    platform_tasks.append(
                         EmbyPlatform(platform)
                         .invite(invite_platform)
                         .create(
@@ -199,7 +213,7 @@ class InviteRedeemController(Controller):
                         )
                     )
                 case "jellyfin":
-                    asyncio.create_task(
+                    platform_tasks.append(
                         JellyfinPlatform(platform)
                         .invite(invite_platform)
                         .create(
@@ -209,11 +223,40 @@ class InviteRedeemController(Controller):
                         )
                     )
                 case "plex":
-                    asyncio.create_task(
+                    platform_tasks.append(
                         PlexPlatform(platform)
                         .invite(invite_platform)
                         .create(data.plex_token)  # type: ignore
                     )
+
+        platform_tasks_results = await asyncio.gather(*platform_tasks)
+
+        # Use Plex auth over emby/jellyfin
+        if data.plex_token:
+            user_account = await asyncio.get_event_loop().run_in_executor(
+                None, lambda: MyPlexAccount(token=data.plex_token)
+            )
+            await Session.mongo.user.insert_one(
+                UserModel(
+                    roles=[],
+                    internal_platform_ids=user_platform_access_ids,
+                    username=user_account.email,
+                    password=None,
+                    auth_type="plexOauth",
+                ).model_dump()
+            )
+        elif data.jellyfin_emby_auth:
+            await Session.mongo.user.insert_one(
+                UserModel(
+                    roles=[],
+                    internal_platform_ids=user_platform_access_ids,
+                    username=data.jellyfin_emby_auth.username,
+                    password=bcrypt.hashpw(
+                        data.jellyfin_emby_auth.password.encode(), bcrypt.gensalt()
+                    ).decode(),
+                    auth_type="usernamePassword",
+                ).model_dump()
+            )
 
 
 router = Router(
