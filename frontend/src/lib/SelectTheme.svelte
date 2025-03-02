@@ -1,8 +1,13 @@
 <script lang="ts">
 	import { siteThemeStore } from '$lib/stores';
 
+	let { value = $bindable() } = $props();
+
+	value = $siteThemeStore;
+
 	function changeTheme(dataTheme: string) {
 		siteThemeStore.set(dataTheme);
+		value = dataTheme;
 	}
 
 	const themesPreviews: { name: string; emoji: string }[] = [

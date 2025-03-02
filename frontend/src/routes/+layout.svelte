@@ -3,20 +3,19 @@
 	import { onMount } from 'svelte';
 	import '../app.css';
 
+	import { apiClient } from '$lib/api';
 	import { AppBar } from '@skeletonlabs/skeleton-svelte';
 	import { Github } from 'lucide-svelte';
 
 	let { children } = $props();
 
 	onMount(() => {
-		// if (data.customization) {
-		// 	document.body.setAttribute('data-theme', data.customization.themeName);
-
-		// 	siteThemeStore.set(data.customization.themeName);
-		// 	siteNameStore.set(data.customization.siteName);
-		// } else {
-		// 	document.body.setAttribute('data-theme', 'wintry');
-		// }
+		apiClient.GET('/api/controllers/v1/setup').then((resp) => {
+			if (resp.data) {
+				siteNameStore.set(resp.data.site_title);
+				siteThemeStore.set(resp.data.theme);
+			}
+		});
 
 		siteThemeStore.subscribe((dataTheme) => document.body.setAttribute('data-theme', dataTheme));
 	});

@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { siteNameStore } from '$lib/stores';
 	import { get } from 'svelte/store';
+
+	let { value = $bindable() } = $props();
+
+	value = get(siteNameStore);
 </script>
 
 <label class="label">
@@ -11,10 +15,10 @@
 		oninput={(e: Event) => {
 			siteNameStore.set((e.target as HTMLInputElement).value);
 		}}
+		bind:value
 		class="input"
 		type="text"
 		name="siteTitle"
 		required
-		value={get(siteNameStore)}
 	/>
 </label>

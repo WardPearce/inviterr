@@ -66,6 +66,7 @@ app = Litestar(
             url="https://github.com/WardPearce/inviterr/blob/main/LICENSE",
         ),
     ),
+    debug=SETTINGS.proxy_urls.backend == "http://127.0.0.1:8000",
     cors_config=CORSConfig(
         allow_origins=[SETTINGS.proxy_urls.frontend],
         allow_credentials=True,

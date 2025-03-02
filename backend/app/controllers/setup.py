@@ -1,7 +1,9 @@
 import bcrypt
+from app.models.roles import ROLES
 from app.models.setup import BasicSetupCreateModel, BasicSetupModel
 from app.resources import Session
 from litestar import Controller, Router, get, post
+from litestar.exceptions import NotAuthorizedException
 
 
 class SetupBasicController(Controller):
@@ -14,7 +16,7 @@ class SetupBasicController(Controller):
             await Session.mongo.basic_setup.count_documents({"completed": True}) > 0
         )
         if is_completed:
-            return
+            raise NotAuthorizedException(detail="Setup already completed")
 
         await Session.mongo.basic_setup.insert_one(
             {
@@ -25,6 +27,7 @@ class SetupBasicController(Controller):
                 "password": bcrypt.hashpw(
                     data.password.encode(), bcrypt.gensalt(rounds=16)
                 ),
+                "roles": [ROLES.root],
             }
         )
 
@@ -33,7 +36,7 @@ class SetupBasicController(Controller):
         tags=["setup", "public"],
     )
     async def public(self) -> BasicSetupModel:
-        result = await Session.mongo.basic_setup.find_one({"completed"})
+        result = await Session.mongo.basic_setup.find_one({"completed": True})
         if not result:
             return BasicSetupModel(site_title="Inviterr", theme="wintry")
 

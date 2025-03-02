@@ -11,8 +11,8 @@ class MongoDB(BaseModel):
 
 
 class ProxiedUrls(BaseModel):
-    frontend: str = "http://localhost"
-    backend: str = "http://localhost/api"
+    frontend: str = "http://localhost:5173"
+    backend: str = "http://127.0.0.1:8000"
 
 
 class Settings(BaseSettings):

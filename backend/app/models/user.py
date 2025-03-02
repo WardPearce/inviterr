@@ -9,7 +9,7 @@ class UserModel(BaseModel):
         [], description="Defines what special permissions the user has"
     )
     internal_platform_ids: list[str] = Field(
-        description="Internal platform IDs user can acess"
+        description="Internal platform IDs user can access"
     )
     username: str
     password: Optional[str] = Field(

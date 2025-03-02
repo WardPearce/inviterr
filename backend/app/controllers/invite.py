@@ -16,6 +16,7 @@ from app.models.invite.internal import (
 )
 from app.models.invite.redeem import RedeemInviteModel
 from app.models.platform import PlatformModel
+from app.models.roles import ROLES
 from app.models.user import UserModel
 from app.resources import Session
 from app.services.platform.emby import EmbyPlatform
@@ -36,7 +37,7 @@ class InviteIdController(Controller):
     @get(
         description="Find an invite",
         tags=["invite", "find"],
-        guards=[user_roles_guard(["invite.find"])],
+        guards=[user_roles_guard([ROLES.invite_find])],
     )
     async def find(self, id_: str) -> InviteModel:
         return await Invite(id_).get()
@@ -44,7 +45,7 @@ class InviteIdController(Controller):
     @put(
         description="Modify an invite",
         tags=["invite", "modify"],
-        guards=[user_roles_guard(["invite.modify"])],
+        guards=[user_roles_guard([ROLES.invite_modify])],
     )
     async def modify(self, id_: str, data: CreateInviteModel) -> None:
         if not data.jellyfin and not data.emby and data.plex:
@@ -60,7 +61,7 @@ class InviteIdController(Controller):
         path="/password-reset",
         description="Resets the password for an invite",
         tags=["invite", "reset"],
-        guards=[user_roles_guard(["invite.reset"])],
+        guards=[user_roles_guard([ROLES.invite_reset])],
         status_code=200,
     )
     async def reset(self, id_: str) -> str:
@@ -82,7 +83,7 @@ class InviteIdController(Controller):
     @delete(
         description="Deletes an invite",
         tags=["invite", "delete"],
-        guards=[user_roles_guard(["invite.delete"])],
+        guards=[user_roles_guard([ROLES.invite_delete])],
     )
     async def delete_(self, id_: str) -> None:
         await Invite(id_).delete()
@@ -92,7 +93,7 @@ class InviteController(Controller):
     @post(
         description="Create an invite",
         tags=["invite", "create"],
-        guards=[user_roles_guard(["invite.create"])],
+        guards=[user_roles_guard([ROLES.invite_create])],
     )
     async def create(
         self, request: Request[UserModel, Any, Any], data: CreateInviteModel
@@ -141,7 +142,7 @@ class InviteController(Controller):
     @get(
         description="List 100 invites at a time",
         tags=["invite", "list"],
-        guards=[user_roles_guard(["invite.list"])],
+        guards=[user_roles_guard([ROLES.invite_list])],
         path="/page:int",
     )
     async def list_(self, page: int = 0) -> list[InviteModel]:
