@@ -7,9 +7,11 @@ from litestar.exceptions import NotAuthorizedException
 
 
 class SetupBasicController(Controller):
+
     @post(
         description="Setups the basic information for Inviterr, can only be called once.",
         tags=["setup"],
+        exclude_from_auth=True,
     )
     async def setup(self, data: BasicSetupCreateModel) -> None:
         is_completed = (
