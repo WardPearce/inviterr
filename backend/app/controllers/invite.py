@@ -5,22 +5,22 @@ from typing import Any
 from uuid import uuid4
 
 import bcrypt
-from inviterr.helpers.guards import user_roles_guard
-from inviterr.helpers.invite import Invite
-from inviterr.helpers.misc import url_safe_id
-from inviterr.helpers.user import username_exists
-from inviterr.models.invite.internal import (
+from app.helpers.guards import user_roles_guard
+from app.helpers.invite import Invite
+from app.helpers.misc import url_safe_id
+from app.helpers.user import username_exists
+from app.models.invite.internal import (
     CreatedInviteModel,
     CreateInviteModel,
     InviteModel,
 )
-from inviterr.models.invite.redeem import RedeemInviteModel
-from inviterr.models.platform import PlatformModel
-from inviterr.models.user import UserModel
-from inviterr.resources import Session
-from inviterr.services.platform.emby import EmbyPlatform
-from inviterr.services.platform.jellyfin import JellyfinPlatform
-from inviterr.services.platform.plex import PlexPlatform
+from app.models.invite.redeem import RedeemInviteModel
+from app.models.platform import PlatformModel
+from app.models.user import UserModel
+from app.resources import Session
+from app.services.platform.emby import EmbyPlatform
+from app.services.platform.jellyfin import JellyfinPlatform
+from app.services.platform.plex import PlexPlatform
 from litestar import Controller, Request, Router, delete, get, post, put
 from litestar.exceptions import (
     ClientException,
@@ -61,6 +61,7 @@ class InviteIdController(Controller):
         description="Resets the password for an invite",
         tags=["invite", "reset"],
         guards=[user_roles_guard(["invite.reset"])],
+        status_code=200,
     )
     async def reset(self, id_: str) -> str:
         password = secrets.token_urlsafe(6)
@@ -70,7 +71,7 @@ class InviteIdController(Controller):
             {
                 "$set": {
                     "password": bcrypt.hashpw(
-                        password.encode(), bcrypt.gensalt()
+                        password.encode(), bcrypt.gensalt(rounds=16)
                     ).decode()
                 }
             },
@@ -126,7 +127,9 @@ class InviteController(Controller):
             **data.model_dump(),
             user_id=request.user.id,
             id=id_,
-            password=bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode(),
+            password=bcrypt.hashpw(
+                password.encode(), bcrypt.gensalt(rounds=16)
+            ).decode(),
         )
 
         await Session.mongo.invite.insert_one(created_invite.model_dump())
@@ -279,7 +282,8 @@ class InviteRedeemController(Controller):
                     internal_platform_ids=user_platform_access_ids,
                     username=data.jellyfin_emby_auth.username,
                     password=bcrypt.hashpw(
-                        data.jellyfin_emby_auth.password.encode(), bcrypt.gensalt()
+                        data.jellyfin_emby_auth.password.encode(),
+                        bcrypt.gensalt(rounds=16),
                     ).decode(),
                     auth_type="usernamePassword",
                     invite_id=id_,

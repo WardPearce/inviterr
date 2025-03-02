@@ -2,10 +2,14 @@
 	import SelectTheme from '$lib/SelectTheme.svelte';
 	import SetTitle from '$lib/SetTitle.svelte';
 	import { ArrowRight } from 'lucide-svelte';
+
+	async function finishSetup(event: Event) {
+		event.preventDefault();
+	}
 </script>
 
 <div class="pt-5">
-	<form method="POST">
+	<form onsubmit={finishSetup}>
 		<SetTitle />
 
 		<SelectTheme />

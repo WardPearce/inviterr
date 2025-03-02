@@ -1,9 +1,10 @@
 import aiohttp
 import pkg_resources
+from app import controllers
+from app.env import SETTINGS
+from app.resources import Session
 from apscheduler.jobstores.mongodb import MongoDBJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from inviterr.env import SETTINGS
-from inviterr.resources import Session
 from litestar import Litestar, Request
 from litestar.config.cors import CORSConfig
 from litestar.openapi import OpenAPIConfig
@@ -12,8 +13,6 @@ from litestar.openapi.spec import License, Server
 from motor import motor_asyncio
 from pydantic import BaseModel
 from pymongo import AsyncMongoClient
-
-from inviterr import controllers
 
 
 class ScalarRenderPluginRouteFix(ScalarRenderPlugin):
@@ -57,7 +56,7 @@ app = Litestar(
     route_handlers=[controllers.router],
     openapi_config=OpenAPIConfig(
         title="Inviterr",
-        version=pkg_resources.get_distribution(__name__).version,
+        version="0.0.1",
         render_plugins=[ScalarRenderPluginRouteFix()],
         description="OpenAPI specification for Inviterr.",
         servers=[Server(url="", description="Production server.")],
@@ -68,7 +67,7 @@ app = Litestar(
         ),
     ),
     cors_config=CORSConfig(
-        allow_origins=[],
+        allow_origins=[SETTINGS.proxy_urls.frontend],
         allow_credentials=True,
     ),
     type_encoders={BaseModel: lambda m: m.model_dump(by_alias=False)},

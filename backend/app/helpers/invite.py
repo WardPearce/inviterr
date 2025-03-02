@@ -1,5 +1,5 @@
-from inviterr.models.invite.internal import InviteModel
-from inviterr.resources import Session
+from app.models.invite.internal import InviteModel
+from app.resources import Session
 from litestar.exceptions import NotFoundException
 
 

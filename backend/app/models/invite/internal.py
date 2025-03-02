@@ -1,12 +1,12 @@
 from datetime import datetime
 from typing import List, Literal, Optional
 
-from inviterr.models.invite.permissions import (
+from app.models.invite.permissions import (
     InviteEmbyPermissions,
     InviteJellyfinPermissions,
     InvitePlexPermissions,
 )
-from inviterr.models.onboarding import OnboardTemplateOrderModel
+from app.models.onboarding import OnboardTemplateOrderModel
 from pydantic import BaseModel, Field
 
 

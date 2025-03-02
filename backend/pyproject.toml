@@ -4,6 +4,13 @@ version = "0.0.1"
 description = ""
 authors = ["WardPearce <wardpearce@pm.me>"]
 readme = "README.md"
+packages = [
+    {include = "*", from = "app"},
+    {include = "run.py"}
+]
+
+[tool.poetry.scripts]
+server = "run:main"
 
 [tool.poetry.dependencies]
 python = "^3.11"

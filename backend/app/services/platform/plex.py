@@ -1,8 +1,8 @@
 import asyncio
 
-from inviterr.models.invite.internal import InvitePlexModel
-from inviterr.models.platform import PlatformModel
-from inviterr.services.platform.base import PlatformBase, PlatformInviteBase
+from app.models.invite.internal import InvitePlexModel
+from app.models.platform import PlatformModel
+from app.services.platform.base import PlatformBase, PlatformInviteBase
 from litestar.exceptions import ClientException
 from plexapi.myplex import MyPlexAccount, PlexServer
 

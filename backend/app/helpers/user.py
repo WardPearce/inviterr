@@ -1,4 +1,4 @@
-from inviterr.resources import Session
+from app.resources import Session
 
 
 async def username_exists(username: str) -> bool:

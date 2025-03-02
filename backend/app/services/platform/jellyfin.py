@@ -1,6 +1,6 @@
-from inviterr.models.invite.internal import InviteJellyfinModel
-from inviterr.models.platform import PlatformModel
-from inviterr.services.platform.base import PlatformBase, PlatformInviteBase
+from app.models.invite.internal import InviteJellyfinModel
+from app.models.platform import PlatformModel
+from app.services.platform.base import PlatformBase, PlatformInviteBase
 
 
 class JellyfinInvite(PlatformInviteBase):

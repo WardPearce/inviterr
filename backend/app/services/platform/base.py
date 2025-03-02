@@ -1,13 +1,13 @@
 from typing import Literal, Optional
 
 from aiohttp.client import ClientResponse
-from inviterr.models.invite.internal import (
+from app.models.invite.internal import (
     InviteEmbyModel,
     InviteJellyfinModel,
     InvitePlexModel,
 )
-from inviterr.models.platform import PlatformModel
-from inviterr.resources import Session
+from app.models.platform import PlatformModel
+from app.resources import Session
 from litestar.exceptions import NotFoundException
 
 
