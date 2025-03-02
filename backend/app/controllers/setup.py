@@ -2,12 +2,12 @@ from datetime import timedelta
 from uuid import uuid4
 
 import bcrypt
-from app.helpers.jwt import JWT_AUTH
+from app.helpers.jwt import JWT_AUTH, login
 from app.models.roles import ROLES
 from app.models.setup import BasicSetupCreateModel, BasicSetupModel
 from app.models.user import UserModel
 from app.resources import Session
-from litestar import Controller, Response, Router, get, post
+from litestar import Controller, Request, Response, Router, get, post
 from litestar.exceptions import NotAuthorizedException
 
 
@@ -18,7 +18,9 @@ class SetupBasicController(Controller):
         tags=["setup"],
         exclude_from_auth=True,
     )
-    async def setup(self, data: BasicSetupCreateModel) -> Response[UserModel]:
+    async def setup(
+        self, request: Request, data: BasicSetupCreateModel
+    ) -> Response[UserModel]:
         is_completed = (
             await Session.mongo.basic_setup.count_documents({"completed": True}) > 0
         )
@@ -50,7 +52,7 @@ class SetupBasicController(Controller):
             ).model_dump()
         )
 
-        return JWT_AUTH.login(identifier=user_id, token_expiration=timedelta(days=31))
+        return await login(user_id, request.headers.get("User-Agent", None))
 
     @get(
         description="Gets basic information for Inviterr, what's publicly available",

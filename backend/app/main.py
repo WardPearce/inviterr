@@ -36,6 +36,10 @@ async def shutdown_sessions(app: Litestar) -> None:
         await Session.http.close()
 
 
+async def mongo_create_indexes(app: Litestar) -> None:
+    await Session.mongo.session.create_index("expires", expireAfterSeconds=120)
+
+
 async def load_onboarding_templates(app: Litestar) -> None:
     current_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -77,6 +81,6 @@ app = Litestar(
         allow_credentials=True,
     ),
     type_encoders={BaseModel: lambda m: m.model_dump(by_alias=False)},
-    on_startup=[startup_sessions, load_onboarding_templates],
+    on_startup=[startup_sessions, mongo_create_indexes, load_onboarding_templates],
     on_shutdown=[shutdown_sessions],
 )
