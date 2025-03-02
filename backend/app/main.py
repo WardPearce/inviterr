@@ -1,10 +1,11 @@
+import glob
+import os
+
+import aiofiles
 import aiohttp
-import pkg_resources
 from app import controllers
 from app.env import SETTINGS
 from app.resources import Session
-from apscheduler.jobstores.mongodb import MongoDBJobStore
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from litestar import Litestar, Request
 from litestar.config.cors import CORSConfig
 from litestar.openapi import OpenAPIConfig
@@ -12,7 +13,6 @@ from litestar.openapi.plugins import ScalarRenderPlugin
 from litestar.openapi.spec import License, Server
 from motor import motor_asyncio
 from pydantic import BaseModel
-from pymongo import AsyncMongoClient
 
 
 class ScalarRenderPluginRouteFix(ScalarRenderPlugin):
@@ -30,26 +30,31 @@ async def startup_sessions(app: Litestar) -> None:
 
     Session.http = aiohttp.ClientSession()
 
-    scheduler = AsyncIOScheduler(
-        gconfig={
-            "jobstores": {
-                "default",
-                MongoDBJobStore(
-                    database=f"{SETTINGS.mongo.collection}_apscheduler",
-                    client=AsyncMongoClient(
-                        host=SETTINGS.mongo.host, port=SETTINGS.mongo.port
-                    ),
-                ),
-            }
-        }
-    )
-
-    scheduler.start()
-
 
 async def shutdown_sessions(app: Litestar) -> None:
     if Session.http:
         await Session.http.close()
+
+
+async def load_onboarding_templates(app: Litestar) -> None:
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+
+    onboarding_dir = os.path.join(current_dir, "onboarding", "*.md")
+
+    for file in glob.glob(onboarding_dir):
+        if file.endswith("README.md"):
+            continue
+
+        async with aiofiles.open(file, "r") as f_:
+            contents = await f_.read()
+
+        file_name = file.split("/")[-1]
+
+        await Session.mongo.templates.update_one(
+            {"name": file_name.removesuffix(".md")},
+            {"$set": {"contents": contents}},
+            upsert=True,
+        )
 
 
 app = Litestar(
@@ -72,6 +77,6 @@ app = Litestar(
         allow_credentials=True,
     ),
     type_encoders={BaseModel: lambda m: m.model_dump(by_alias=False)},
-    on_startup=[startup_sessions],
-    on_shutdown=[],
+    on_startup=[startup_sessions, load_onboarding_templates],
+    on_shutdown=[shutdown_sessions],
 )
