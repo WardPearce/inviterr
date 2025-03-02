@@ -57,6 +57,7 @@ class SetupBasicController(Controller):
     @get(
         description="Gets basic information for Inviterr, what's publicly available",
         tags=["setup", "public"],
+        exclude_from_auth=True,
     )
     async def public(self) -> BasicSetupCompletedModel:
         result = await Session.mongo.basic_setup.find_one({"completed": True})

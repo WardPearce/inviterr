@@ -2,7 +2,7 @@
 	import { siteNameStore } from '$lib/stores';
 	import { get } from 'svelte/store';
 
-	let { value = $bindable() } = $props();
+	let { value = $bindable() }: { value: string } = $props();
 
 	value = get(siteNameStore);
 </script>

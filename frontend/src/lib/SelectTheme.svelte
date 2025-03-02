@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { siteThemeStore } from '$lib/stores';
 
-	let { value = $bindable() } = $props();
+	let { value = $bindable() }: { value: string } = $props();
 
 	value = $siteThemeStore;
 
@@ -48,6 +48,7 @@
 			class="bg-surface-50-950 hover:preset-outlined-surface-800-200 grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 rounded-md p-4 !ring-[1px]"
 			class:preset-outlined-primary-500={theme.name === $siteThemeStore}
 			class:preset-outlined-surface-100-900={theme.name !== $siteThemeStore}
+			type="button"
 		>
 			<span>{theme.emoji}</span>
 			<h3 class="h6 !text-surface-950-50 text-left">{theme.name}</h3>

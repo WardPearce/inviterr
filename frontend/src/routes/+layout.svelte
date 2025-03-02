@@ -24,7 +24,7 @@
 
 <AppBar>
 	{#snippet lead()}
-		<h5 class="h5">{$siteNameStore}</h5>
+		<a href="/"><h5 class="h5">{$siteNameStore}</h5></a>
 	{/snippet}
 	{#snippet trail()}
 		<a href="https://github.com/WardPearce/inviterr" target="_blank" rel="noopener noreferrer"

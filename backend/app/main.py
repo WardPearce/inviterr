@@ -5,6 +5,7 @@ import aiofiles
 import aiohttp
 from app import controllers
 from app.env import SETTINGS
+from app.helpers.jwt import JWT_AUTH
 from app.resources import Session
 from litestar import Litestar, Request
 from litestar.config.cors import CORSConfig
@@ -83,4 +84,5 @@ app = Litestar(
     type_encoders={BaseModel: lambda m: m.model_dump(by_alias=False)},
     on_startup=[startup_sessions, mongo_create_indexes, load_onboarding_templates],
     on_shutdown=[shutdown_sessions],
+    middleware=[JWT_AUTH.middleware],
 )
