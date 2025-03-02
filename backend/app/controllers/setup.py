@@ -2,9 +2,9 @@ from datetime import timedelta
 from uuid import uuid4
 
 import bcrypt
-from app.helpers.jwt import JWT_AUTH, login
+from app.helpers.jwt import login
 from app.models.roles import ROLES
-from app.models.setup import BasicSetupCreateModel, BasicSetupModel
+from app.models.setup import BasicSetupCompletedModel, BasicSetupCreateModel
 from app.models.user import UserModel
 from app.resources import Session
 from litestar import Controller, Request, Response, Router, get, post
@@ -58,12 +58,14 @@ class SetupBasicController(Controller):
         description="Gets basic information for Inviterr, what's publicly available",
         tags=["setup", "public"],
     )
-    async def public(self) -> BasicSetupModel:
+    async def public(self) -> BasicSetupCompletedModel:
         result = await Session.mongo.basic_setup.find_one({"completed": True})
         if not result:
-            return BasicSetupModel(site_title="Inviterr", theme="wintry")
+            return BasicSetupCompletedModel(
+                site_title="Inviterr", theme="wintry", completed=False
+            )
 
-        return BasicSetupModel(**result)
+        return BasicSetupCompletedModel(**result)
 
 
 router = Router("/setup", route_handlers=[SetupBasicController])

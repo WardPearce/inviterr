@@ -106,7 +106,7 @@ class InviteController(Controller):
         # Ensure ID isn't currently in use.
         while await Invite(id_).exists():
             id_ = url_safe_id(6)
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)
 
         password = secrets.token_urlsafe(16)
 
@@ -189,9 +189,7 @@ class InviteRedeemController(Controller):
         if not invite.jellyfin and not invite.emby and invite.plex:
             raise ClientException(detail="Invite must include at least one platform")
 
-        await Session.mongo.invite.update_one(
-            {"_id": id_}, {"$set": {"uses": invite.uses - 1}}
-        )
+        await Session.mongo.invite.update_one({"_id": id_}, {"$inc": {"uses": -1}})
 
         if not bcrypt.checkpw(password.encode(), invite.password.encode()):
             raise NotAuthorizedException()
@@ -258,7 +256,9 @@ class InviteRedeemController(Controller):
                         .create(data.plex_token)  # type: ignore
                     )
 
-        platform_tasks_results = await asyncio.gather(*platform_tasks)
+        platform_tasks_results = await asyncio.gather(
+            *platform_tasks, return_exceptions=True
+        )
 
         # Use Plex auth over emby/jellyfin
         if data.plex_token:

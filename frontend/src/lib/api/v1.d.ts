@@ -136,21 +136,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/controllers/v1/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * InvalidateSession
+         * @description Invalidates a given session
+         */
+        delete: operations["ApiControllersV1SessionsSessionIdInvalidateSession"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/controllers/v1/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sessions
+         * @description Lists all active sessions for myself
+         */
+        get: operations["ApiControllersV1SessionsSessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BasicSetupCompletedModel */
+        BasicSetupCompletedModel: {
+            site_title: string;
+            theme: "catppuccin" | "cerberus" | "concord" | "crimson" | "fennec" | "hamlindigo" | "legacy" | "mint" | "modern" | "mona" | "nosh" | "nouveau" | "pine" | "reign" | "rocket" | "rose" | "sahara" | "seafoam" | "terminus" | "vintage" | "vox" | "wintry";
+            completed: boolean;
+        };
         /** BasicSetupCreateModel */
         BasicSetupCreateModel: {
             site_title: string;
             theme: "catppuccin" | "cerberus" | "concord" | "crimson" | "fennec" | "hamlindigo" | "legacy" | "mint" | "modern" | "mona" | "nosh" | "nouveau" | "pine" | "reign" | "rocket" | "rose" | "sahara" | "seafoam" | "terminus" | "vintage" | "vox" | "wintry";
             email: string;
             password: string;
-        };
-        /** BasicSetupModel */
-        BasicSetupModel: {
-            site_title: string;
-            theme: "catppuccin" | "cerberus" | "concord" | "crimson" | "fennec" | "hamlindigo" | "legacy" | "mint" | "modern" | "mona" | "nosh" | "nouveau" | "pine" | "reign" | "rocket" | "rose" | "sahara" | "seafoam" | "terminus" | "vintage" | "vox" | "wintry";
         };
         /** CreateInviteModel */
         CreateInviteModel: {
@@ -485,6 +526,37 @@ export interface components {
             jellyfin_emby_auth?: components["schemas"]["JellyfinEmbyAuth"] | null;
             plex_token?: string | null;
         };
+        /** SessionModel */
+        SessionModel: {
+            /** Format: date-time */
+            expires: string;
+            /** Format: date-time */
+            created: string;
+            device?: string | null;
+            user_id: string;
+            id: string;
+        };
+        /** UserModel */
+        UserModel: {
+            /** @description ID of user */
+            id: string;
+            /**
+             * @description Defines what special permissions the user has
+             * @default []
+             */
+            roles: string[];
+            /** @description Internal platform IDs user can access */
+            internal_platform_ids: string[];
+            username: string;
+            /** @description Hashed password if plexOauth isn't being used. */
+            password?: string | null;
+            /** @enum {string} */
+            auth_type: "usernamePassword" | "plexOauth";
+            /** @default Unknown */
+            country: string;
+            /** @description ID of invitation redeemed for access */
+            invite_id?: string | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -770,7 +842,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BasicSetupModel"];
+                    "application/json": components["schemas"]["BasicSetupCompletedModel"];
                 };
             };
         };
@@ -793,6 +865,43 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
+                content: {
+                    "application/json": components["schemas"]["UserModel"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiControllersV1SessionsSessionIdInvalidateSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Request fulfilled, nothing follows */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
                 content?: never;
             };
             /** @description Bad request syntax or unsupported method */
@@ -808,6 +917,26 @@ export interface operations {
                             [key: string]: unknown;
                         } | unknown[];
                     };
+                };
+            };
+        };
+    };
+    ApiControllersV1SessionsSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionModel"][];
                 };
             };
         };

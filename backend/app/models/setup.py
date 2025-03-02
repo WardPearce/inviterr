@@ -34,3 +34,7 @@ class BasicSetupModel(BaseModel):
 class BasicSetupCreateModel(BasicSetupModel):
     email: str = Field(max_length=255)
     password: str = Field(max_length=255)
+
+
+class BasicSetupCompletedModel(BasicSetupModel):
+    completed: bool

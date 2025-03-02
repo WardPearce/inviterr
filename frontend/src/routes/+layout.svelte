@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { siteNameStore, siteThemeStore } from '$lib/stores';
+	import { siteNameStore, siteSetupCompletedStore, siteThemeStore } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import '../app.css';
 
@@ -14,6 +14,7 @@
 			if (resp.data) {
 				siteNameStore.set(resp.data.site_title);
 				siteThemeStore.set(resp.data.theme);
+				siteSetupCompletedStore.set(resp.data.completed);
 			}
 		});
 
