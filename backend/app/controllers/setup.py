@@ -1,8 +1,13 @@
+from datetime import timedelta
+from uuid import uuid4
+
 import bcrypt
+from app.helpers.jwt import JWT_AUTH
 from app.models.roles import ROLES
 from app.models.setup import BasicSetupCreateModel, BasicSetupModel
+from app.models.user import UserModel
 from app.resources import Session
-from litestar import Controller, Router, get, post
+from litestar import Controller, Response, Router, get, post
 from litestar.exceptions import NotAuthorizedException
 
 
@@ -13,7 +18,7 @@ class SetupBasicController(Controller):
         tags=["setup"],
         exclude_from_auth=True,
     )
-    async def setup(self, data: BasicSetupCreateModel) -> None:
+    async def setup(self, data: BasicSetupCreateModel) -> Response[UserModel]:
         is_completed = (
             await Session.mongo.basic_setup.count_documents({"completed": True}) > 0
         )
@@ -25,13 +30,27 @@ class SetupBasicController(Controller):
                 "completed": True,
                 "theme": data.theme,
                 "site_title": data.site_title,
-                "email": data.email,
-                "password": bcrypt.hashpw(
-                    data.password.encode(), bcrypt.gensalt(rounds=16)
-                ),
-                "roles": [ROLES.root],
             }
         )
+
+        user_id = str(uuid4())
+
+        await Session.mongo.user.insert_one(
+            UserModel(
+                roles=[ROLES.root],
+                internal_platform_ids=["*"],
+                username=data.email,
+                password=bcrypt.hashpw(
+                    data.password.encode(),
+                    bcrypt.gensalt(rounds=16),
+                ).decode(),
+                auth_type="usernamePassword",
+                invite_id=None,
+                id=user_id,
+            ).model_dump()
+        )
+
+        return JWT_AUTH.login(identifier=user_id, token_expiration=timedelta(days=31))
 
     @get(
         description="Gets basic information for Inviterr, what's publicly available",

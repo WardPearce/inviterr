@@ -1,6 +1,7 @@
+import secrets
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings
 
 
@@ -19,7 +20,7 @@ class Settings(BaseSettings):
     mongo: MongoDB = MongoDB()
     proxy_urls: ProxiedUrls = ProxiedUrls()
 
-    username_caching_interval: int = 160
+    jwt_secret: str = Field(secrets.token_urlsafe(), min_length=32)
 
     model_config = {"env_prefix": "inviterr_"}
 

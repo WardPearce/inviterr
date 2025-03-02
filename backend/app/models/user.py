@@ -17,4 +17,4 @@ class UserModel(BaseModel):
     )
     auth_type: Literal["usernamePassword", "plexOauth"]
     country: str = "Unknown"
-    invite_id: str = Field(description="ID of invitation redeemed for access")
+    invite_id: str | None = Field(description="ID of invitation redeemed for access")
