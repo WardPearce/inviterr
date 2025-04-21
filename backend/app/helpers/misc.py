@@ -1,5 +1,9 @@
 import secrets
 
+from argon2 import PasswordHasher
+
+PASSWORD_HASHER = PasswordHasher()
+
 
 def url_safe_id(length: int) -> str:
     """Used for generating invite Ids, as can't have '-' in them.

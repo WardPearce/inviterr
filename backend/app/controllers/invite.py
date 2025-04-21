@@ -4,10 +4,9 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
-import bcrypt
 from app.helpers.guards import user_roles_guard
 from app.helpers.invite import Invite
-from app.helpers.misc import url_safe_id
+from app.helpers.misc import PASSWORD_HASHER, url_safe_id
 from app.helpers.user import username_exists
 from app.models.invite.internal import (
     CreatedInviteModel,
@@ -22,6 +21,7 @@ from app.resources import Session
 from app.services.platform.emby import EmbyPlatform
 from app.services.platform.jellyfin import JellyfinPlatform
 from app.services.platform.plex import PlexPlatform
+from argon2.exceptions import VerifyMismatchError
 from litestar import Controller, Request, Router, delete, get, post, put
 from litestar.exceptions import (
     ClientException,
@@ -69,13 +69,7 @@ class InviteIdController(Controller):
 
         await Session.mongo.invite.update_one(
             {"_id": id_},
-            {
-                "$set": {
-                    "password": bcrypt.hashpw(
-                        password.encode(), bcrypt.gensalt(rounds=16)
-                    ).decode()
-                }
-            },
+            {"$set": {"password": PASSWORD_HASHER.hash(password)}},
         )
 
         return password
@@ -128,9 +122,7 @@ class InviteController(Controller):
             **data.model_dump(),
             user_id=request.user.id,
             id=id_,
-            password=bcrypt.hashpw(
-                password.encode(), bcrypt.gensalt(rounds=16)
-            ).decode(),
+            password=PASSWORD_HASHER.hash(password),
         )
 
         await Session.mongo.invite.insert_one(created_invite.model_dump())
@@ -189,10 +181,12 @@ class InviteRedeemController(Controller):
         if not invite.jellyfin and not invite.emby and invite.plex:
             raise ClientException(detail="Invite must include at least one platform")
 
-        await Session.mongo.invite.update_one({"_id": id_}, {"$inc": {"uses": -1}})
-
-        if not bcrypt.checkpw(password.encode(), invite.password.encode()):
+        try:
+            PASSWORD_HASHER.verify(invite.password, password)
+        except VerifyMismatchError:
             raise NotAuthorizedException()
+
+        await Session.mongo.invite.update_one({"_id": id_}, {"$inc": {"uses": -1}})
 
         if invite.jellyfin and not data.jellyfin_emby_auth:
             raise ClientException(detail="jellyfin_emby_auth must be included")
@@ -282,10 +276,7 @@ class InviteRedeemController(Controller):
                     roles=invite.roles,
                     internal_platform_ids=user_platform_access_ids,
                     username=data.jellyfin_emby_auth.username,
-                    password=bcrypt.hashpw(
-                        data.jellyfin_emby_auth.password.encode(),
-                        bcrypt.gensalt(rounds=16),
-                    ).decode(),
+                    password=PASSWORD_HASHER.hash(data.jellyfin_emby_auth.password),
                     auth_type="usernamePassword",
                     invite_id=id_,
                     id=str(uuid4()),

@@ -1,8 +1,8 @@
 from datetime import timedelta
 from uuid import uuid4
 
-import bcrypt
 from app.helpers.jwt import login
+from app.helpers.misc import PASSWORD_HASHER
 from app.models.roles import ROLES
 from app.models.setup import BasicSetupCompletedModel, BasicSetupCreateModel
 from app.models.user import UserModel
@@ -42,10 +42,7 @@ class SetupBasicController(Controller):
                 roles=[ROLES.root],
                 internal_platform_ids=["*"],
                 username=data.email,
-                password=bcrypt.hashpw(
-                    data.password.encode(),
-                    bcrypt.gensalt(rounds=16),
-                ).decode(),
+                password=PASSWORD_HASHER.hash(data.password),
                 auth_type="usernamePassword",
                 invite_id=None,
                 id=user_id,
