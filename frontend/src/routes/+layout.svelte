@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { siteNameStore, siteSetupCompletedStore, siteThemeStore } from '$lib/stores';
-	import { onMount } from 'svelte';
-	import '../app.css';
 
 	import { apiClient } from '$lib/api';
 	import { AppBar } from '@skeletonlabs/skeleton-svelte';
 	import { Github } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import '../app.css';
 
 	let { children } = $props();
 
