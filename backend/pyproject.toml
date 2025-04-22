@@ -5,8 +5,8 @@ description = ""
 authors = ["WardPearce <wardpearce@pm.me>"]
 readme = "README.md"
 packages = [
-    {include = "*", from = "app"},
-    {include = "run.py"}
+    {include = "*", from = "app", format = ["sdist"] },
+    {include = "run.py", format = ["sdist"] }
 ]
 
 [tool.poetry.scripts]
