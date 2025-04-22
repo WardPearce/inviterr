@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from aiohttp.client import ClientResponse
 from app.models.invite.internal import (
@@ -27,8 +27,8 @@ class PlatformInviteBase:
             raise NotFoundException(detail="Folders don't match instance.")
 
     async def create(
-        self, username: Optional[str] = None, password: Optional[str] = None
-    ) -> None: ...
+        self, username: Optional[str], password: Optional[str]
+    ) -> Any: ...
 
     async def delete(self) -> None: ...
 

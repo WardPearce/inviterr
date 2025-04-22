@@ -200,7 +200,7 @@ class InviteRedeemController(Controller):
         if data.jellyfin_emby_auth:
             data.jellyfin_emby_auth.username = data.jellyfin_emby_auth.username.strip()
 
-            if username_exists(data.jellyfin_emby_auth.username):
+            if await username_exists(data.jellyfin_emby_auth.username):
                 raise ClientException(detail="Username taken")
 
             await Session.mongo.jellyfin_emby_taken.insert_one(
@@ -209,7 +209,7 @@ class InviteRedeemController(Controller):
 
         user_platform_access_ids: list[str] = []
 
-        platform_tasks = []
+        platform_tasks: list[asyncio.Task] = []
 
         for invite_platform in invite.plex + invite.jellyfin + invite.emby:
             platform_result = await Session.mongo.platform.find_one(
@@ -250,7 +250,7 @@ class InviteRedeemController(Controller):
                         .create(data.plex_token)  # type: ignore
                     )
 
-        platform_tasks_results = await asyncio.gather(
+        await asyncio.gather(
             *platform_tasks, return_exceptions=True
         )
 

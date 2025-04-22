@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Literal, Optional
+from typing import Literal, Optional
 
 from app.models.invite.permissions import (
     InviteEmbyPermissions,
@@ -14,7 +14,7 @@ class InvitePlatformBaseModel(BaseModel):
     platform_internal_id: str = Field(
         description="Inviterr's internal ID of the server"
     )
-    folders: Optional[List[str]] = Field(
+    folders: Optional[list[str]] = Field(
         None,
         description="A list of folders enabled for the user, if None all folders will be provided.",
     )
@@ -42,11 +42,11 @@ class InviteEmbyModel(InvitePlatformBaseModel):
 
 
 class CreateInviteModel(BaseModel):
-    jellyfin: List[InviteJellyfinModel] = []
-    plex: List[InvitePlexModel] = []
-    emby: List[InviteEmbyModel] = []
+    jellyfin: list[InviteJellyfinModel] = []
+    plex: list[InvitePlexModel] = []
+    emby: list[InviteEmbyModel] = []
 
-    roles: List[str] = Field(
+    roles: list[str] = Field(
         [], description="Any special permissions said user should be given"
     )
 

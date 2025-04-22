@@ -7,7 +7,7 @@ from litestar.exceptions import NotAuthorizedException
 from litestar.handlers.base import BaseRouteHandler
 
 
-def user_roles_guard(required_roles: list[str]) -> Callable:
+def user_roles_guard(required_roles: list[str]) -> Callable[[ASGIConnection[Any, UserModel, Any, Any], BaseRouteHandler], None]:
 
     def check(
         connection: ASGIConnection[Any, UserModel, Any, Any], _: BaseRouteHandler
