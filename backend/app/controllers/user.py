@@ -51,11 +51,10 @@ class UserController(Controller):
 
                 auth_check_results = await asyncio.gather(*auth_checks, return_exceptions=False)
 
-                # Any failed checks won't be returned, but we check the 1st result just in case
+                # Any failed checks won't be returned
                 if not auth_check_results:
                     raise NotAuthorizedException()
-                elif not auth_check_results[0]:
-                    raise NotAuthorizedException()
+
         else:
             loop = asyncio.get_event_loop()
 
