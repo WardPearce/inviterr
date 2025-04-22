@@ -1,7 +1,7 @@
 import asyncio
 import secrets
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Optional
 from uuid import uuid4
 
 from argon2.exceptions import VerifyMismatchError
@@ -11,6 +11,7 @@ from litestar.exceptions import (
     NotAuthorizedException,
     NotFoundException,
 )
+from litestar.security.jwt import Token
 from plexapi.myplex import MyPlexAccount
 from plexapi.myplex import Unauthorized as PlexUnauthorized
 
@@ -165,7 +166,11 @@ class InviteRedeemController(Controller):
         tags=["invite", "redeem"],
         exclude_from_auth=True,
     )
-    async def redeem(self, data: RedeemInviteModel) -> None:
+    async def redeem(
+        self,
+        request: Request[Optional[UserModel], Optional[Token], Any],
+        data: RedeemInviteModel,
+    ) -> None:
         if not data.jellyfin_emby_auth and not data.plex_token:
             raise ClientException(
                 detail="Must have at least jellyfin_emby_auth or plex_token defined"
@@ -212,8 +217,12 @@ class InviteRedeemController(Controller):
                 data.jellyfin_emby_auth.username.strip()
             )
 
-            if await username_exists(data.jellyfin_emby_auth.username):
-                raise ClientException(detail="Username taken")
+            if (
+                not request.user
+                or request.user.username != data.jellyfin_emby_auth.username
+            ):
+                if await username_exists(data.jellyfin_emby_auth.username):
+                    raise ClientException(detail="Username taken")
 
         user_platform_access_ids: list[str] = []
         user_platform_types = set()
@@ -269,35 +278,55 @@ class InviteRedeemController(Controller):
 
         await asyncio.gather(*platform_tasks, return_exceptions=True)
 
-        # Prefer jellyfin/emby username over plex.
-        if data.jellyfin_emby_auth:
-            await Session.mongo.user.insert_one(
-                UserModel(
-                    roles=invite.roles,
-                    internal_platform_ids=user_platform_access_ids,
-                    username=data.jellyfin_emby_auth.username,
-                    supported_auth_type=list(user_platform_types),
-                    invite_id=id_,
-                    _id=str(uuid4()),
-                ).model_dump()
-            )
-        elif data.plex_token:
-            try:
-                user_account = await asyncio.get_event_loop().run_in_executor(
-                    None, lambda: MyPlexAccount(token=data.plex_token)
+        if not request.user:
+            # Prefer jellyfin/emby username over plex.
+            if data.jellyfin_emby_auth:
+                await Session.mongo.user.insert_one(
+                    UserModel(
+                        roles=invite.roles,
+                        internal_platform_ids=user_platform_access_ids,
+                        username=data.jellyfin_emby_auth.username,
+                        supported_auth_type=list(user_platform_types),
+                        invite_id=id_,
+                        _id=str(uuid4()),
+                    ).model_dump()
                 )
-            except PlexUnauthorized:
-                raise NotAuthorizedException()
+            elif data.plex_token:
+                try:
+                    user_account = (
+                        await asyncio.get_event_loop().run_in_executor(
+                            None, lambda: MyPlexAccount(token=data.plex_token)
+                        )
+                    )
+                except PlexUnauthorized:
+                    raise NotAuthorizedException()
 
-            await Session.mongo.user.insert_one(
-                UserModel(
-                    roles=invite.roles,
-                    internal_platform_ids=user_platform_access_ids,
-                    username=user_account.email,
-                    supported_auth_type=list(user_platform_types),
-                    invite_id=id_,
-                    _id=str(uuid4()),
-                ).model_dump()
+                await Session.mongo.user.insert_one(
+                    UserModel(
+                        roles=invite.roles,
+                        internal_platform_ids=user_platform_access_ids,
+                        username=user_account.email,
+                        supported_auth_type=list(user_platform_types),
+                        invite_id=id_,
+                        _id=str(uuid4()),
+                    ).model_dump()
+                )
+        else:
+            await Session.mongo.user.update_one(
+                {"_id": request.user.id},
+                {
+                    "$push": {
+                        "internal_platform_ids": {
+                            "$each": user_platform_access_ids
+                        }
+                    },
+                    "$addToSet": {
+                        "supported_auth_type": {
+                            "$each": list(user_platform_types)
+                        },
+                        "roles": {"$each": invite.roles},
+                    },
+                },
             )
 
 

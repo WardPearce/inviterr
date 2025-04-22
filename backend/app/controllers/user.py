@@ -28,7 +28,7 @@ class UserController(Controller):
             user = await user_obj.get()
 
             if data.auth_type == "local":
-                if not user.password:
+                if not user.password or "local" not in user.supported_auth_type:
                     raise NotAuthorizedException()
 
                 try:
@@ -37,6 +37,12 @@ class UserController(Controller):
                     raise NotAuthorizedException()
             else:
                 auth_checks = []
+
+                if (
+                    "jellyfin" not in user.supported_auth_type
+                    or "emby" not in user.supported_auth_type
+                ):
+                    raise NotAuthorizedException()
 
                 async for platform in user_obj.platforms():
                     match platform.platform:
@@ -72,6 +78,11 @@ class UserController(Controller):
                 raise NotAuthorizedException()
 
             user = await User(user_account.email).get()
+
+            # Someone's Jellyfin username may be a valid email,
+            # without that user having access to that email
+            if "plex" not in user.supported_auth_type:
+                raise NotAuthorizedException()
 
         return await login(user.id, request.headers.get("User-Agent", None))
 
