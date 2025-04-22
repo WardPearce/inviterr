@@ -13,7 +13,8 @@ class UserModel(BaseModel):
     )
     username: str
     password: Optional[str] = Field(
-        description="Hashed password if plexOauth isn't being used."
+        default=None,
+        description="Only used for root admin"
     )
     auth_type: Literal["usernamePassword", "plexOauth"]
     country: str = "Unknown"
