@@ -43,7 +43,7 @@ class SetupBasicController(Controller):
                 internal_platform_ids=["*"],
                 username=data.email,
                 password=PASSWORD_HASHER.hash(data.password),
-                auth_type="local",
+                supported_auth_type=["local"],
                 invite_id=None,
                 _id=user_id,
             ).model_dump()

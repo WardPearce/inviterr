@@ -12,6 +12,7 @@ from litestar.exceptions import (
     NotFoundException,
 )
 from plexapi.myplex import MyPlexAccount
+from plexapi.myplex import Unauthorized as PlexUnauthorized
 
 from app.helpers.guards import user_roles_guard
 from app.helpers.invite import Invite
@@ -50,7 +51,9 @@ class InviteIdController(Controller):
     )
     async def modify(self, id_: str, data: CreateInviteModel) -> None:
         if not data.jellyfin and not data.emby and data.plex:
-            raise ClientException(detail="Invite must include at least one platform")
+            raise ClientException(
+                detail="Invite must include at least one platform"
+            )
 
         await Invite(id_).exists_raise()
 
@@ -94,7 +97,9 @@ class InviteController(Controller):
         self, request: Request[UserModel, Any, Any], data: CreateInviteModel
     ) -> CreatedInviteModel:
         if not data.jellyfin and not data.emby and data.plex:
-            raise ClientException(detail="Invite must include at least one platform")
+            raise ClientException(
+                detail="Invite must include at least one platform"
+            )
 
         id_ = url_safe_id(6)
 
@@ -180,14 +185,18 @@ class InviteRedeemController(Controller):
             raise NotAuthorizedException()
 
         if not invite.jellyfin and not invite.emby and invite.plex:
-            raise ClientException(detail="Invite must include at least one platform")
+            raise ClientException(
+                detail="Invite must include at least one platform"
+            )
 
         try:
             PASSWORD_HASHER.verify(invite.password, password)
         except VerifyMismatchError:
             raise NotAuthorizedException()
 
-        await Session.mongo.invite.update_one({"_id": id_}, {"$inc": {"uses": -1}})
+        await Session.mongo.invite.update_one(
+            {"_id": id_}, {"$inc": {"uses": -1}}
+        )
 
         if invite.jellyfin and not data.jellyfin_emby_auth:
             raise ClientException(detail="jellyfin_emby_auth must be included")
@@ -199,16 +208,15 @@ class InviteRedeemController(Controller):
             raise ClientException(detail="plex_token must be included")
 
         if data.jellyfin_emby_auth:
-            data.jellyfin_emby_auth.username = data.jellyfin_emby_auth.username.strip()
+            data.jellyfin_emby_auth.username = (
+                data.jellyfin_emby_auth.username.strip()
+            )
 
             if await username_exists(data.jellyfin_emby_auth.username):
                 raise ClientException(detail="Username taken")
 
-            await Session.mongo.jellyfin_emby_taken.insert_one(
-                {"username": data.jellyfin_emby_auth.username}
-            )
-
         user_platform_access_ids: list[str] = []
+        user_platform_types = set()
 
         platform_tasks = []
 
@@ -219,12 +227,16 @@ class InviteRedeemController(Controller):
             if not platform_result:
                 continue
 
-            user_platform_access_ids.append(invite_platform.platform_internal_id)
+            user_platform_access_ids.append(
+                invite_platform.platform_internal_id
+            )
 
             platform = PlatformModel(**platform_result)
 
             match invite_platform.type:
                 case "emby":
+                    user_platform_types.add("emby")
+
                     platform_tasks.append(
                         EmbyPlatform(platform)
                         .invite(invite_platform)
@@ -235,6 +247,8 @@ class InviteRedeemController(Controller):
                         )
                     )
                 case "jellyfin":
+                    user_platform_types.add("jellyfin")
+
                     platform_tasks.append(
                         JellyfinPlatform(platform)
                         .invite(invite_platform)
@@ -245,38 +259,42 @@ class InviteRedeemController(Controller):
                         )
                     )
                 case "plex":
+                    user_platform_types.add("plex")
+
                     platform_tasks.append(
                         PlexPlatform(platform)
                         .invite(invite_platform)
                         .create(data.plex_token)  # type: ignore
                     )
 
-        await asyncio.gather(
-            *platform_tasks, return_exceptions=True
-        )
+        await asyncio.gather(*platform_tasks, return_exceptions=True)
 
-        # Use Plex auth over emby/jellyfin
-        if data.plex_token:
-            user_account = await asyncio.get_event_loop().run_in_executor(
-                None, lambda: MyPlexAccount(token=data.plex_token)
-            )
-            await Session.mongo.user.insert_one(
-                UserModel(
-                    roles=invite.roles,
-                    internal_platform_ids=user_platform_access_ids,
-                    username=user_account.email,
-                    auth_type="plex",
-                    invite_id=id_,
-                    _id=str(uuid4()),
-                ).model_dump()
-            )
-        elif data.jellyfin_emby_auth:
+        # Prefer jellyfin/emby username over plex.
+        if data.jellyfin_emby_auth:
             await Session.mongo.user.insert_one(
                 UserModel(
                     roles=invite.roles,
                     internal_platform_ids=user_platform_access_ids,
                     username=data.jellyfin_emby_auth.username,
-                    auth_type="jellyfinOrEmby",
+                    supported_auth_type=list(user_platform_types),
+                    invite_id=id_,
+                    _id=str(uuid4()),
+                ).model_dump()
+            )
+        elif data.plex_token:
+            try:
+                user_account = await asyncio.get_event_loop().run_in_executor(
+                    None, lambda: MyPlexAccount(token=data.plex_token)
+                )
+            except PlexUnauthorized:
+                raise NotAuthorizedException()
+
+            await Session.mongo.user.insert_one(
+                UserModel(
+                    roles=invite.roles,
+                    internal_platform_ids=user_platform_access_ids,
+                    username=user_account.email,
+                    supported_auth_type=list(user_platform_types),
                     invite_id=id_,
                     _id=str(uuid4()),
                 ).model_dump()
@@ -285,6 +303,10 @@ class InviteRedeemController(Controller):
 
 router = Router(
     "/invite",
-    route_handlers=[InviteRedeemController, InviteIdController, InviteController],
+    route_handlers=[
+        InviteRedeemController,
+        InviteIdController,
+        InviteController,
+    ],
     tags=["invite"],
 )

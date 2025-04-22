@@ -2,7 +2,6 @@ import asyncio
 from typing import Any
 
 from argon2.exceptions import VerifyMismatchError
-from app.helpers.jwt import login
 from litestar import Controller, Request, Router, get, post
 from litestar.exceptions import NotAuthorizedException
 from litestar.response import Response
@@ -10,8 +9,9 @@ from litestar.security.jwt import Token
 from plexapi.myplex import MyPlexAccount
 from plexapi.myplex import Unauthorized as PlexUnauthorized
 
+from app.helpers.jwt import login
 from app.helpers.misc import PASSWORD_HASHER
-from app.helpers.user import User
+from app.helpers.user import User, user_from_name
 from app.models.user import LoginModel, UserModel
 from app.services.platform.emby import EmbyPlatform
 from app.services.platform.jellyfin import JellyfinPlatform
@@ -22,10 +22,9 @@ class UserController(Controller):
     async def login(self, request: Request, data: LoginModel) -> Response:
         if data.auth_type in ("jellyfinOrEmby", "local"):
             if not data.username:
-                 raise NotAuthorizedException()
+                raise NotAuthorizedException()
 
-            user_obj = User(data.username)
-
+            user_obj = await user_from_name(data.username)
             user = await user_obj.get()
 
             if data.auth_type == "local":
@@ -43,14 +42,20 @@ class UserController(Controller):
                     match platform.platform:
                         case "jellyfin":
                             auth_checks.append(
-                                JellyfinPlatform(platform).login(data.username, data.password)
+                                JellyfinPlatform(platform).login(
+                                    data.username, data.password
+                                )
                             )
                         case "emby":
                             auth_checks.append(
-                                EmbyPlatform(platform).login(data.username, data.password)
+                                EmbyPlatform(platform).login(
+                                    data.username, data.password
+                                )
                             )
 
-                auth_check_results = await asyncio.gather(*auth_checks, return_exceptions=False)
+                auth_check_results = await asyncio.gather(
+                    *auth_checks, return_exceptions=False
+                )
 
                 # Any failed checks won't be returned
                 if not auth_check_results:

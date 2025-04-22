@@ -16,7 +16,7 @@ class UserModel(BaseModel):
         default=None,
         description="Only used for root admin"
     )
-    auth_type: Literal["jellyfinOrEmby", "plex", "local"]
+    supported_auth_type: list[Literal["emby", "jellyfin", "plex", "local"]]
     country: str = "Unknown"
     invite_id: str | None = Field(description="ID of invitation redeemed for access")
 
