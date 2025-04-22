@@ -40,14 +40,15 @@ class UserController(Controller):
                 auth_checks = []
 
                 async for platform in user_obj.platforms():
-                    if platform.platform == "jellyfin":
-                        auth_checks.append(
-                            JellyfinPlatform(platform).login(data.username, data.password)
-                        )
-                    elif platform.platform == "emby":
-                        auth_checks.append(
-                            EmbyPlatform(platform).login(data.username, data.password)
-                        )
+                    match platform.platform:
+                        case "jellyfin":
+                            auth_checks.append(
+                                JellyfinPlatform(platform).login(data.username, data.password)
+                            )
+                        case "emby":
+                            auth_checks.append(
+                                EmbyPlatform(platform).login(data.username, data.password)
+                            )
 
                 auth_check_results = await asyncio.gather(*auth_checks, return_exceptions=False)
 
