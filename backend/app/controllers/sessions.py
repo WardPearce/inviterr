@@ -1,10 +1,11 @@
 from typing import Any, List
 
+from litestar import Controller, Request, Router, delete, get
+from litestar.security.jwt import Token
+
 from app.models.session import SessionModel
 from app.models.user import UserModel
 from app.resources import Session
-from litestar import Controller, Request, Router, delete, get
-from litestar.security.jwt import Token
 
 
 class SessionController(Controller):

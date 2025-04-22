@@ -1,5 +1,6 @@
-from app.controllers import invite, sessions, setup, admin, user
 from litestar import Router
+
+from app.controllers import admin, invite, sessions, setup, user
 
 router = Router(
     "/api/controllers/v1",

@@ -1,13 +1,12 @@
 from typing import Literal
 
-from bson import ObjectId
 from pydantic import BaseModel, Field
 
 
 class PlatformModel(BaseModel):
     """Describes a media platform, e.g. jellyfin, plex or emby."""
 
-    id: str = Field(description="Inviterr's internal ID of the server")
+    id: str = Field(description="Inviterr's internal ID of the server", alias="_id")
     platform: Literal["plex", "emby", "jellyfin"]
     api_key: str = Field(description="API key to access external media server")
     server: str = Field(description="Endpoint for the media server")

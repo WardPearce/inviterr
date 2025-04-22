@@ -1,10 +1,11 @@
 from typing import Any, Callable
 
-from app.models.roles import ROLES
-from app.models.user import UserModel
 from litestar.connection import ASGIConnection
 from litestar.exceptions import NotAuthorizedException
 from litestar.handlers.base import BaseRouteHandler
+
+from app.models.roles import ROLES
+from app.models.user import UserModel
 
 
 def user_roles_guard(required_roles: list[str]) -> Callable[[ASGIConnection[Any, UserModel, Any, Any], BaseRouteHandler], None]:

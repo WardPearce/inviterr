@@ -3,10 +3,6 @@ import os
 
 import aiofiles
 import aiohttp
-from app import controllers
-from app.env import SETTINGS
-from app.helpers.jwt import JWT_AUTH
-from app.resources import Session
 from litestar import Litestar, Request
 from litestar.config.cors import CORSConfig
 from litestar.openapi import OpenAPIConfig
@@ -15,11 +11,16 @@ from litestar.openapi.spec import License, Server
 from motor import motor_asyncio
 from pydantic import BaseModel
 
+from app import controllers
+from app.env import SETTINGS
+from app.helpers.jwt import JWT_AUTH
+from app.resources import Session
+
 
 class ScalarRenderPluginRouteFix(ScalarRenderPlugin):
     @staticmethod
     def get_openapi_json_route(request: Request) -> str:
-        return f"/schema/openapi.json"
+        return "/schema/openapi.json"
 
 
 async def startup_sessions(app: Litestar) -> None:

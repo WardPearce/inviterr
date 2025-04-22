@@ -1,7 +1,6 @@
 from app.models.invite.internal import InviteEmbyModel
 from app.models.platform import PlatformModel
 from app.services.platform.base import PlatformBase, PlatformInviteBase
-from litestar.exceptions import NotFoundException
 
 
 class EmbyInvite(PlatformInviteBase):
@@ -48,7 +47,25 @@ class EmbyInvite(PlatformInviteBase):
 
 class EmbyPlatform(PlatformBase):
     def __init__(self, platform: PlatformModel) -> None:
+        assert platform.platform == "emby", f"Passed {platform.platform} on emby"
+
         super().__init__(platform)
 
     def invite(self, invite: InviteEmbyModel) -> EmbyInvite:
         return EmbyInvite(self, invite)
+
+    async def login(self, username: str, password: str) -> bool:
+        resp = await self.request(
+            "/Users/AuthenticateByName",
+            "POST",
+            include_auth=False,
+            headers={
+                "X-Emby-Authorization": 'MediaBrowser Client="Jellyfin Web", Device="Firefox", DeviceId="TW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NDsgcnY6ODUuMCkgR2Vja28vMjAxMDAxMDEgRmlyZWZveC84NS4wfDE2MTI5MjcyMDM5NzM1", Version="10.8.0"'
+            },
+            json={
+                "Username": username,
+                "Pw": password
+            }
+        )
+
+        return resp.ok

@@ -4,6 +4,15 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
+from argon2.exceptions import VerifyMismatchError
+from litestar import Controller, Request, Router, delete, get, post, put
+from litestar.exceptions import (
+    ClientException,
+    NotAuthorizedException,
+    NotFoundException,
+)
+from plexapi.myplex import MyPlexAccount
+
 from app.helpers.guards import user_roles_guard
 from app.helpers.invite import Invite
 from app.helpers.misc import PASSWORD_HASHER, url_safe_id
@@ -21,14 +30,6 @@ from app.resources import Session
 from app.services.platform.emby import EmbyPlatform
 from app.services.platform.jellyfin import JellyfinPlatform
 from app.services.platform.plex import PlexPlatform
-from argon2.exceptions import VerifyMismatchError
-from litestar import Controller, Request, Router, delete, get, post, put
-from litestar.exceptions import (
-    ClientException,
-    NotAuthorizedException,
-    NotFoundException,
-)
-from plexapi.myplex import MyPlexAccount
 
 
 class InviteIdController(Controller):
@@ -209,7 +210,7 @@ class InviteRedeemController(Controller):
 
         user_platform_access_ids: list[str] = []
 
-        platform_tasks: list[asyncio.Task] = []
+        platform_tasks = []
 
         for invite_platform in invite.plex + invite.jellyfin + invite.emby:
             platform_result = await Session.mongo.platform.find_one(
@@ -264,9 +265,9 @@ class InviteRedeemController(Controller):
                     roles=invite.roles,
                     internal_platform_ids=user_platform_access_ids,
                     username=user_account.email,
-                    auth_type="plexOauth",
+                    auth_type="plex",
                     invite_id=id_,
-                    id=str(uuid4()),
+                    _id=str(uuid4()),
                 ).model_dump()
             )
         elif data.jellyfin_emby_auth:
@@ -275,9 +276,9 @@ class InviteRedeemController(Controller):
                     roles=invite.roles,
                     internal_platform_ids=user_platform_access_ids,
                     username=data.jellyfin_emby_auth.username,
-                    auth_type="usernamePassword",
+                    auth_type="jellyfinOrEmby",
                     invite_id=id_,
-                    id=str(uuid4()),
+                    _id=str(uuid4()),
                 ).model_dump()
             )
 

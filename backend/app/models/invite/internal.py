@@ -1,13 +1,14 @@
 from datetime import datetime
 from typing import Literal, Optional
 
+from pydantic import BaseModel, Field
+
 from app.models.invite.permissions import (
     InviteEmbyPermissions,
     InviteJellyfinPermissions,
     InvitePlexPermissions,
 )
 from app.models.onboarding import OnboardTemplateOrderModel
-from pydantic import BaseModel, Field
 
 
 class InvitePlatformBaseModel(BaseModel):

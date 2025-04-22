@@ -1,6 +1,7 @@
+from litestar.exceptions import NotFoundException
+
 from app.models.invite.internal import InviteModel
 from app.resources import Session
-from litestar.exceptions import NotFoundException
 
 
 class Invite:

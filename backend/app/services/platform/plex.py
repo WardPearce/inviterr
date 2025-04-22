@@ -1,10 +1,12 @@
 import asyncio
 
+from litestar.exceptions import ClientException, NotAuthorizedException
+from plexapi.myplex import MyPlexAccount, PlexServer
+from plexapi.myplex import Unauthorized as PlexUnauthorized
+
 from app.models.invite.internal import InvitePlexModel
 from app.models.platform import PlatformModel
 from app.services.platform.base import PlatformBase, PlatformInviteBase
-from litestar.exceptions import ClientException
-from plexapi.myplex import MyPlexAccount, PlexServer
 
 
 class PlexInvite(PlatformInviteBase):
@@ -29,9 +31,12 @@ class PlexInvite(PlatformInviteBase):
 
         # Is long running synchronous so must be ran in executor
         server_account = await loop.run_in_executor(None, plex.myPlexAccount)
-        user_account = await loop.run_in_executor(
-            None, lambda: MyPlexAccount(token=password)
-        )
+        try:
+            user_account = await loop.run_in_executor(
+                None, lambda: MyPlexAccount(token=password)
+            )
+        except PlexUnauthorized:
+            raise NotAuthorizedException()
 
         invite = await loop.run_in_executor(
             None,
@@ -53,7 +58,12 @@ class PlexInvite(PlatformInviteBase):
 
 class PlexPlatform(PlatformBase):
     def __init__(self, platform: PlatformModel) -> None:
+        assert platform.platform == "plex", f"Passed {platform.platform} on plex"
+
         super().__init__(platform)
+
+    async def login(self, username: str, password: str) -> bool:
+        raise NotImplementedError()
 
     def invite(self, invite: InvitePlexModel) -> PlexInvite:
         return PlexInvite(self, invite)

@@ -1,5 +1,7 @@
-from datetime import timedelta
 from uuid import uuid4
+
+from litestar import Controller, Request, Response, Router, get, post
+from litestar.exceptions import NotAuthorizedException
 
 from app.helpers.jwt import login
 from app.helpers.misc import PASSWORD_HASHER
@@ -7,8 +9,6 @@ from app.models.roles import ROLES
 from app.models.setup import BasicSetupCompletedModel, BasicSetupCreateModel
 from app.models.user import UserModel
 from app.resources import Session
-from litestar import Controller, Request, Response, Router, get, post
-from litestar.exceptions import NotAuthorizedException
 
 
 class SetupBasicController(Controller):
@@ -20,7 +20,7 @@ class SetupBasicController(Controller):
     )
     async def setup(
         self, request: Request, data: BasicSetupCreateModel
-    ) -> Response[UserModel]:
+    ) -> Response:
         is_completed = (
             await Session.mongo.basic_setup.count_documents({"completed": True}) > 0
         )
@@ -43,9 +43,9 @@ class SetupBasicController(Controller):
                 internal_platform_ids=["*"],
                 username=data.email,
                 password=PASSWORD_HASHER.hash(data.password),
-                auth_type="usernamePassword",
+                auth_type="local",
                 invite_id=None,
-                id=user_id,
+                _id=user_id,
             ).model_dump()
         )
 

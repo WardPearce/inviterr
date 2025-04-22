@@ -2,13 +2,14 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import uuid4
 
+from litestar import Response
+from litestar.connection import ASGIConnection
+from litestar.security.jwt import JWTCookieAuth, Token
+
 from app.env import SETTINGS
 from app.models.session import SessionModel
 from app.models.user import UserModel
 from app.resources import Session
-from litestar import Response
-from litestar.connection import ASGIConnection
-from litestar.security.jwt import JWTCookieAuth, Token
 
 
 async def retrieve_user_handler(
@@ -30,7 +31,7 @@ async def retrieve_user_handler(
     return UserModel(**result)
 
 
-async def login(identifier: str, user_agent: str | None) -> Response[UserModel]:
+async def login(identifier: str, user_agent: str | None) -> Response:
     token_expires = timedelta(days=31)
     now = datetime.now(tz=timezone.utc)
 
