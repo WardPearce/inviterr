@@ -1,4 +1,4 @@
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Tuple
 
 from app.models.platform import PlatformModel
 from app.models.user import UserModel
@@ -10,12 +10,12 @@ async def username_exists(username: str) -> bool:
     return await Session.mongo.user.count_documents({"username": username}) > 0
 
 
-async def user_from_name(username: str) -> "User":
+async def user_from_name(username: str) -> Tuple["User", UserModel]:
     result = await Session.mongo.user.find_one({"username": username})
     if not result:
         raise NotFoundException(detail="User not found")
 
-    return User(result["_id"])
+    return User(result["_id"]), UserModel(**result)
 
 
 class User:

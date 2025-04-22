@@ -3,7 +3,11 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 
-class UserModel(BaseModel):
+class UserPublicModel(BaseModel):
+    supported_auth_type: list[Literal["emby", "jellyfin", "plex", "local"]]
+
+
+class UserModel(UserPublicModel):
     id: str = Field(description="ID of user", alias="_id")
     roles: list[str] = Field(
         [], description="Defines what special permissions the user has"
@@ -13,12 +17,12 @@ class UserModel(BaseModel):
     )
     username: str
     password: Optional[str] = Field(
-        default=None,
-        description="Only used for root admin"
+        default=None, description="Only used for root admin"
     )
-    supported_auth_type: list[Literal["emby", "jellyfin", "plex", "local"]]
     country: str = "Unknown"
-    invite_id: str | None = Field(description="ID of invitation redeemed for access")
+    invite_id: str | None = Field(
+        description="ID of invitation redeemed for access"
+    )
 
 
 class LoginModel(BaseModel):

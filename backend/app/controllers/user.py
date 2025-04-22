@@ -12,20 +12,29 @@ from plexapi.myplex import Unauthorized as PlexUnauthorized
 from app.helpers.jwt import login
 from app.helpers.misc import PASSWORD_HASHER
 from app.helpers.user import User, user_from_name
-from app.models.user import LoginModel, UserModel
+from app.models.user import LoginModel, UserModel, UserPublicModel
 from app.services.platform.emby import EmbyPlatform
 from app.services.platform.jellyfin import JellyfinPlatform
 
 
 class UserController(Controller):
+    @get(
+        "/{username:str}/public",
+        description="Public information about a user",
+        exclude_from_auth=True,
+    )
+    async def public(self, username: str) -> UserPublicModel:
+        _, user = await user_from_name(username)
+
+        return UserPublicModel(supported_auth_type=user.supported_auth_type)
+
     @post("/login", description="User login")
     async def login(self, request: Request, data: LoginModel) -> Response:
         if data.auth_type in ("jellyfinOrEmby", "local"):
             if not data.username:
                 raise NotAuthorizedException()
 
-            user_obj = await user_from_name(data.username)
-            user = await user_obj.get()
+            user_obj, user = await user_from_name(data.username)
 
             if data.auth_type == "local":
                 if not user.password or "local" not in user.supported_auth_type:
